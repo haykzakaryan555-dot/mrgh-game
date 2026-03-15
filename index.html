@@ -7,7 +7,7 @@
         body { font-family: sans-serif; background: #f0f2f5; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
         .login-box { background: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); width: 300px; text-align: center; }
         input { width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box; }
-        button { width: 100%; padding: 10px; background: #333; color: white; border: none; border-radius: 5px; cursor: pointer; }
+        button { width: 100%; padding: 10px; background: #393b3d; color: white; border: none; border-radius: 5px; cursor: pointer; }
     </style>
 </head>
 <body>
@@ -38,17 +38,21 @@
             const pass = document.getElementById('pass').value;
 
             signInWithEmailAndPassword(auth, email, pass).then((userCredential) => {
-                const uid = userCredential.user.uid;
+                const user = userCredential.user;
+                
+                // ՔՈ ԵՎ ԸՆԿԵՐՆԵՐԻԴ UID-ՆԵՐԸ
+                const MY_UID = "D08Zx64RABbI3ETaXu31TMIYeWk2"; // Քո UID-ն
+                const ADMIN_UID = "ԱՅՍՏԵՂ_ԳՐԻՐ_ԱԴՄԻՆԻ_UID_Ն";
 
-                // ՈՒՂՂՈՐԴՈՒՄ ԸՍՏ UID-ՆԵՐԻ
-                if (uid === "D08Zx64RABbI3ETaXu31TMIYeWk2") { // Քո UID-ն
-                    window.location.href = "dashboard1.html"; 
-                } else if (uid === "ԱԴՄԻՆԻ_UID") {
+                if (user.uid === ADMIN_UID) {
                     window.location.href = "admin.html";
-                } else if (uid === "ԸՆԿԵՐՈՋ_1_UID") {
-                    window.location.href = "dashboard2.html";
+                } else if (user.uid === MY_UID) {
+                    window.location.href = "dashboard1.html"; // Քո առանձին էջը
+                } else if (user.uid === "ԸՆԿԵՐՈՋ_2_UID") {
+                    window.location.href = "dashboard2.html"; // Ընկերոջդ էջը
                 } else {
-                    window.location.href = "dashboard_guest.html";
+                    // Եթե ցուցակում չկա, գցում ենք ընդհանուր dashboard.html
+                    window.location.href = "dashboard.html";
                 }
             }).catch(err => alert("Սխալ: " + err.message));
         };
