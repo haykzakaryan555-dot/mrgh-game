@@ -2,83 +2,45 @@
 <html lang="hy">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>RGH - Dashboard</title>
     <style>
-        body { margin: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f2f4f5; color: #333; }
-        
-        /* Header & Navigation */
-        .header { background: white; height: 65px; display: flex; align-items: center; justify-content: space-around; border-bottom: 1px solid #ddd; padding: 0 20px; position: sticky; top: 0; z-index: 1000; }
-        .stat-group { display: flex; align-items: center; gap: 8px; font-weight: 500; }
-        .stat-icon { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 14px; }
-        .coin-icon { background: #fdf2d0; border: 1px solid #d4af37; color: #b8860b; }
-        .lvl-icon { background: #eee; border: 1px solid #ccc; }
-
-        /* User Dropdown Section */
-        .user-section { position: relative; cursor: pointer; display: flex; align-items: center; gap: 10px; padding: 5px 10px; border-radius: 8px; transition: 0.2s; }
-        .user-section:hover { background: #f9f9f9; }
-        #userAvatar { width: 40px; height: 40px; border-radius: 5px; object-fit: cover; }
-        .arrow-icon { font-size: 10px; color: #888; transition: 0.3s; }
-        .arrow-icon.rotate { transform: rotate(180deg); }
-
-        .dropdown-menu { 
-            display: none; position: absolute; top: 55px; right: 0; 
-            background: white; border: 1px solid #ddd; border-radius: 4px; 
-            width: 180px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); overflow: hidden;
-        }
-        .dropdown-menu.active { display: block; }
-        .dropdown-item { padding: 12px 15px; border-bottom: 1px solid #eee; font-size: 14px; transition: 0.2s; }
-        .dropdown-item:hover { background: #f5f5f5; }
-        .version-info { font-size: 11px; color: #bbb; padding: 10px 15px; background: #fafafa; }
-
-        /* Game Cards */
-        .container { max-width: 900px; margin: 20px auto; padding: 0 15px; }
-        .game-card { background: white; border-radius: 8px; border: 1px solid #e3e3e3; display: flex; padding: 20px; margin-bottom: 15px; gap: 20px; align-items: center; }
-        .game-img { width: 140px; height: 140px; border-radius: 10px; object-fit: cover; border: 1px solid #eee; }
-        .game-info h2 { margin: 0 0 10px 0; font-size: 24px; }
-        .status-done { color: #2ecc71; font-weight: bold; font-size: 14px; margin-bottom: 15px; }
-        .status-wait { color: #e74c3c; font-weight: bold; font-size: 14px; margin-bottom: 15px; }
-        .btn-connect { background: #393b3d; color: white; border: none; padding: 10px 25px; border-radius: 4px; cursor: pointer; font-weight: 500; }
-        .btn-connect:hover { background: #2a2c2e; }
+        body { margin: 0; font-family: sans-serif; background: #f2f4f5; }
+        .header { background: white; height: 65px; display: flex; align-items: center; justify-content: space-around; border-bottom: 1px solid #ddd; }
+        .stat-group { display: flex; align-items: center; gap: 8px; }
+        .stat-icon { width: 32px; height: 32px; border-radius: 50%; border: 1px solid #ccc; display: flex; align-items: center; justify-content: center; font-weight: bold; }
+        .user-menu { position: relative; cursor: pointer; display: flex; align-items: center; gap: 10px; }
+        .dropdown { display: none; position: absolute; top: 50px; right: 0; background: white; border: 1px solid #ddd; width: 150px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+        .dropdown.active { display: block; }
+        .dropdown div { padding: 10px; border-bottom: 1px solid #eee; font-size: 14px; }
+        .game-card { background: white; max-width: 600px; margin: 20px auto; padding: 20px; border-radius: 8px; display: flex; gap: 20px; align-items: center; border: 1px solid #ddd; }
+        .status-ok { color: #2ecc71; font-weight: bold; }
+        .status-wait { color: #e74c3c; font-weight: bold; }
     </style>
 </head>
 <body>
-
     <div class="header">
-        <div style="font-weight: bold; font-size: 22px; letter-spacing: 1px;">RGH</div>
-        
-        <div style="display: flex; gap: 40px;">
-            <div class="stat-group">
-                <div class="stat-icon lvl-icon">1</div>
-                Уровень: <span id="dispLevel">--</span>
-            </div>
-            <div class="stat-group">
-                <div class="stat-icon coin-icon">C</div>
-                <span id="dispCoins">--</span>
-            </div>
+        <div style="font-weight:bold">RGH</div>
+        <div class="stat-group">
+            <div class="stat-icon" style="background:#fdf2d0; border-color:#d4af37">C</div>
+            <span id="dispCoins">0</span>
         </div>
-
-        <div class="user-section" onclick="toggleMenu(event)">
-            <img id="userAvatar" src="https://tr.rbxcdn.com/38c353381a3e62f02697b055d7877259/420/420/Avatar/Png" alt="Avatar">
-            <span id="dispName" style="font-weight: 600;">Player</span>
-            <span class="arrow-icon" id="menuArrow">▼</span>
-
-            <div class="dropdown-menu" id="userDropdown">
-                <div class="dropdown-item">Промокоды</div>
-                <div class="dropdown-item">Ранки</div>
-                <div class="dropdown-item" onclick="logout()" style="color: #e74c3c;">Выйти</div>
-                <div class="version-info">Версия 5.0.5</div>
+        <div class="user-menu" onclick="document.getElementById('drop').classList.toggle('active')">
+            <span id="dispName">Player</span> ▼
+            <div class="dropdown" id="drop">
+                <div>Промокоды</div>
+                <div>Ранки</div>
+                <div onclick="location.href='index.html'" style="color:red">Выйти</div>
+                <div style="color:#bbb; font-size:10px">Версия 5.0.5</div>
             </div>
         </div>
     </div>
 
-    <div class="container" id="gameList">
-        </div>
+    <div id="gameList"></div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
-        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyDMX2P4uPPL1N2dsh0qEW57rjZc1Z-pyXs",
@@ -92,66 +54,31 @@
         const db = getDatabase(app);
         const auth = getAuth(app);
 
-        // Մենյուի բացվելու ֆունկցիա
-        window.toggleMenu = (e) => {
-            e.stopPropagation();
-            document.getElementById('userDropdown').classList.toggle('active');
-            document.getElementById('menuArrow').classList.toggle('rotate');
-        };
-
-        // Դուրս գալու ֆունկցիա
-        window.logout = () => signOut(auth).then(() => window.location.href = "index.html");
-
-        // Փակել մենյուն եթե դրսում են սեղմում
-        window.onclick = () => {
-            document.getElementById('userDropdown').classList.remove('active');
-            document.getElementById('menuArrow').classList.remove('rotate');
-        };
-
         onAuthStateChanged(auth, (user) => {
             if (user) {
-                const userRef = ref(db, 'users/' + user.uid);
-                onValue(userRef, (snapshot) => {
+                onValue(ref(db, 'users/' + user.uid), (snapshot) => {
                     const data = snapshot.val();
                     if (data) {
                         document.getElementById('dispName').innerText = data.username || "Player";
                         document.getElementById('dispCoins').innerText = data.coins || 0;
-                        document.getElementById('dispLevel').innerText = data.level || 0;
                         renderGames(data.tasks || {});
                     }
                 });
-            } else {
-                window.location.href = "index.html";
             }
         });
 
-        function renderGames(userTasks) {
-            const games = [
-                { id: "bedwars", name: "Bedwars", img: "https://tr.rbxcdn.com/11693392348/420/420/Image/Png", reqs: ["task1"] },
-                { id: "speed", name: "Legends Of Speed", img: "https://tr.rbxcdn.com/839b236166887560879e4975e58129e9/420/420/Image/Png", reqs: ["task2", "task3"] },
-                { id: "bloxburg", name: "Bloxburg", img: "https://tr.rbxcdn.com/15f60641372337d45f448e894c25a17a/420/420/Image/Png", reqs: [] }
-            ];
-
-            const list = document.getElementById('gameList');
-            list.innerHTML = "";
-            
-            games.forEach(game => {
-                // Եթե բոլոր reqs-ները true են, ապա Завершено
-                const allDone = game.reqs.length === 0 || game.reqs.every(tid => userTasks[tid] === true);
-                
-                list.innerHTML += `
-                    <div class="game-card">
-                        <img src="${game.img}" class="game-img">
-                        <div class="game-info">
-                            <h2>${game.name}</h2>
-                            <div class="${allDone ? 'status-done' : 'status-wait'}">
-                                ${allDone ? 'Завершено' : 'Еще осталось'}
-                            </div>
-                            <button class="btn-connect">Подключиться</button>
-                        </div>
+        function renderGames(tasks) {
+            const gameList = document.getElementById('gameList');
+            const game = { id: "task1", name: "Tower Battles", img: "https://tr.rbxcdn.com/18791039f67a29486c35c8e3128919f4/420/420/Image/Png" };
+            const isDone = tasks[game.id] === true;
+            gameList.innerHTML = `
+                <div class="game-card">
+                    <img src="${game.img}" width="100">
+                    <div>
+                        <h3>${game.name}</h3>
+                        <p class="${isDone ? 'status-ok' : 'status-wait'}">${isDone ? 'Завершено' : 'Еще осталось'}</p>
                     </div>
-                `;
-            });
+                </div>`;
         }
     </script>
 </body>
