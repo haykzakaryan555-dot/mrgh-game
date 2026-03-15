@@ -2,17 +2,44 @@
 <html lang="hy">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>RGH - Admin Panel</title>
     <style>
-        body { font-family: sans-serif; padding: 20px; background: #f4f4f4; }
-        .card { background: white; padding: 15px; margin-bottom: 10px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        button { background: #27ae60; color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; }
-        button:disabled { background: #ccc; }
+        body { font-family: 'Segoe UI', sans-serif; background: #f4f7f6; margin: 0; padding: 20px; }
+        .admin-container { max-width: 900px; margin: 0 auto; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 5px 20px rgba(0,0,0,0.05); }
+        h2 { color: #333; border-bottom: 2px solid #eee; padding-bottom: 15px; }
+        
+        .user-list { margin-top: 20px; }
+        .user-card { 
+            display: flex; justify-content: space-between; align-items: center; 
+            padding: 15px; border: 1px solid #eee; border-radius: 8px; margin-bottom: 10px; 
+            transition: 0.3s;
+        }
+        .user-card:hover { background: #fafafa; border-color: #ddd; }
+        
+        .user-info b { font-size: 18px; color: #2c3e50; }
+        .user-stats { font-size: 14px; color: #7f8c8d; margin-top: 5px; }
+        
+        .actions { display: flex; gap: 10px; }
+        button { 
+            padding: 10px 15px; border: none; border-radius: 6px; cursor: pointer; 
+            font-weight: 600; transition: 0.2s; 
+        }
+        .btn-pay { background: #27ae60; color: white; }
+        .btn-pay:hover { background: #219150; }
+        .btn-pay:disabled { background: #bdc3c7; cursor: not-allowed; }
+        
+        .status-badge { font-size: 12px; padding: 3px 8px; border-radius: 12px; margin-left: 10px; }
+        .status-done { background: #dff9fb; color: #130f40; }
     </style>
 </head>
 <body>
-    <h2>Admin Management</h2>
-    <div id="users"></div>
+
+    <div class="admin-container">
+        <h2>Կառավարման վահանակ (Admin)</h2>
+        <div id="loading">Բեռնվում է...</div>
+        <div class="user-list" id="userList"></div>
+    </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
@@ -30,35 +57,56 @@
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
         const auth = getAuth(app);
-        const ADMIN_UID = "D08Zx64RABbI3ETaXu31TMIYeWk2";
 
+        // Ստուգում ենք, որ մտնողը հենց Ադմինն է
         onAuthStateChanged(auth, (user) => {
-            if (user && user.uid === ADMIN_UID) {
-                onValue(ref(db, 'users'), (snapshot) => {
+            if (user) {
+                const usersRef = ref(db, 'users');
+                onValue(usersRef, (snapshot) => {
+                    document.getElementById('loading').style.display = 'none';
                     const users = snapshot.val();
-                    const container = document.getElementById('users');
-                    container.innerHTML = "";
+                    const listContainer = document.getElementById('userList');
+                    listContainer.innerHTML = "";
+
                     for (let uid in users) {
                         const u = users[uid];
-                        const isDone = u.tasks && u.tasks.task1;
-                        container.innerHTML += `
-                            <div class="card">
-                                <b>${u.username}</b> (Coins: ${u.coins})<br><br>
-                                Tower Battles: 
-                                <button ${isDone ? 'disabled' : ''} onclick="window.pay('${uid}')">
-                                    ${isDone ? 'Վճարված' : 'Վճարել 100 🪙'}
-                                </button>
-                            </div>`;
+                        const isTaskDone = u.tasks && u.tasks.task1 === true;
+
+                        listContainer.innerHTML += `
+                            <div class="user-card">
+                                <div class="user-info">
+                                    <b>${u.username || 'Անուն չկա'}</b> 
+                                    ${isTaskDone ? '<span class="status-badge status-done">Վճարված</span>' : ''}
+                                    <div class="user-stats">
+                                        Coins: ${u.coins || 0} | Level: ${u.level || 1} | Rank: ${u.rank || 'Starter'}
+                                    </div>
+                                    <small style="color:#ccc">UID: ${uid}</small>
+                                </div>
+                                <div class="actions">
+                                    <button class="btn-pay" ${isTaskDone ? 'disabled' : ''} onclick="payUser('${uid}')">
+                                        ${isTaskDone ? 'Վճարված է' : 'Վճարել 100 🪙'}
+                                    </button>
+                                </div>
+                            </div>
+                        `;
                     }
                 });
-            } else { window.location.href = "dashboard.html"; }
+            } else {
+                window.location.href = "index.html";
+            }
         });
 
-        window.pay = (uid) => {
-            const updates = {};
-            updates[`users/${uid}/coins`] = increment(100);
-            updates[`users/${uid}/tasks/task1`] = true;
-            update(ref(db), updates).then(() => alert("Փողը ուղարկվեց:"));
+        // Վճարման ֆունկցիան
+        window.payUser = (uid) => {
+            if (confirm("Հաստատե՞լ վճարումը և խաղի ավարտը:")) {
+                const updates = {};
+                updates[`users/${uid}/coins`] = increment(100);
+                updates[`users/${uid}/tasks/task1`] = true;
+
+                update(ref(db), updates)
+                    .then(() => alert("Վճարումը հաջողությամբ կատարվեց:"))
+                    .catch((err) => alert("Սխալ՝ " + err.message));
+            }
         };
     </script>
 </body>
