@@ -2,24 +2,156 @@
 <html lang="hy">
 <head>
     <meta charset="UTF-8">
-    <title>My RGH Dashboard</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RGH Dashboard - My Page</title>
     <style>
-        body { font-family: sans-serif; background: #f2f4f5; margin: 0; }
-        .header { background: white; padding: 15px; display: flex; justify-content: space-around; border-bottom: 1px solid #ddd; }
+        body {
+            margin: 0;
+            font-family: 'Segoe UI', Tahoma, sans-serif;
+            background-color: #f2f4f5;
+            color: #333;
+        }
+
+        /* Header */
+        .header {
+            background: white;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 50px;
+            border-bottom: 1px solid #e3e3e3;
+        }
+
+        .logo { font-weight: bold; font-size: 20px; color: #555; }
+
+        .stats-container {
+            display: flex;
+            align-items: center;
+            gap: 40px;
+        }
+
+        .stat-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 16px;
+        }
+
+        .circle-icon {
+            width: 32px;
+            height: 32px;
+            background: #fdf2d0; 
+            border: 1px solid #d4af37;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        .profile-section {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+        }
+
+        .avatar-img {
+            width: 40px;
+            height: 40px;
+            border-radius: 5px;
+            background: #eee;
+        }
+
+        /* Main Content */
+        .main-content {
+            padding: 40px 50px;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .game-card {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            display: flex;
+            gap: 25px;
+            margin-bottom: 15px;
+            border: 1px solid #e3e3e3;
+        }
+
+        .game-thumb {
+            width: 180px;
+            height: 180px;
+            border-radius: 8px;
+            object-fit: cover;
+        }
+
+        .game-details h2 { margin: 0; font-size: 32px; }
+        .game-status { font-size: 14px; margin: 10px 0; font-weight: bold; }
+
+        .btn-connect {
+            background: #393b3d;
+            color: white;
+            border: none;
+            padding: 10px 50px;
+            border-radius: 4px;
+            font-size: 14px;
+            cursor: pointer;
+            margin-top: 20px;
+        }
     </style>
 </head>
 <body>
+
     <div class="header">
-        <b>RGH - MY PAGE</b>
-        <div>Coins: <span id="coins">--</span></div>
-        <div>Level: <span id="lvl">--</span></div>
-        <div id="name">Loading...</div>
+        <div class="logo">RGH</div>
+        
+        <div class="stats-container">
+            <div class="stat-item">
+                <div class="circle-icon" style="background: #efefef; border-radius: 3px; border-color: #ccc;">1</div>
+                <span>Уровень: <b id="dispLevel">--</b></span>
+            </div>
+            
+            <div class="stat-item">
+                <div class="circle-icon">C</div>
+                <span id="dispCoins">--</span>
+            </div>
+        </div>
+
+        <div class="profile-section">
+            <img src="https://tr.rbxcdn.com/38c353381a3e62f02697b055d7877259/420/420/Avatar/Png" class="avatar-img" alt="Avatar">
+            <span id="userName">Loading...</span>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <div class="game-card">
+            <img src="https://tr.rbxcdn.com/18791039f67a29486c35c8e3128919f4/420/420/Image/Png" class="game-thumb">
+            <div class="game-details">
+                <h2>Bedwars</h2>
+                <div id="status-task1" class="game-status">Ստուգվում է...</div>
+                <button class="btn-connect">Подключиться</button>
+            </div>
+        </div>
+
+        <div class="game-card">
+            <img src="https://tr.rbxcdn.com/15f60641372337d45f448e894c25a17a/420/420/Image/Png" class="game-thumb">
+            <div class="game-details">
+                <h2>Legends Of Speed</h2>
+                <div id="status-task2" class="game-status">Ստուգվում է...</div>
+                <button class="btn-connect">Подключиться</button>
+            </div>
+        </div>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
         import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
-        
+
         const firebaseConfig = {
             apiKey: "AIzaSyDMX2P4uPPL1N2dsh0qEW57rjZc1Z-pyXs",
             authDomain: "mrgh-game.firebaseapp.com",
@@ -29,15 +161,45 @@
         };
 
         const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
         const db = getDatabase(app);
-        const MY_UID = "D08Zx64RABbI3ETaXu31TMIYeWk2"; // Քո UID-ն
 
-        onValue(ref(db, 'users/' + MY_UID), (snapshot) => {
-            const data = snapshot.val();
-            if (data) {
-                document.getElementById('name').innerText = data.username;
-                document.getElementById('coins').innerText = data.coins;
-                document.getElementById('lvl').innerText = data.level;
+        // Սա քո UID-ն է, որը dashboard1-ը միշտ կկարդա
+        const MY_UID = "D08Zx64RABbI3ETaXu31TMIYeWk2";
+
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                const userRef = ref(db, 'users/' + MY_UID);
+                onValue(userRef, (snapshot) => {
+                    const data = snapshot.val();
+                    if (data) {
+                        // Թարմացնում ենք թվերը
+                        document.getElementById('dispCoins').innerText = data.coins || 0;
+                        document.getElementById('dispLevel').innerText = data.level || 1;
+                        document.getElementById('userName').innerText = data.username || "haykkingbro";
+
+                        // Խաղերի կարգավիճակը (tasks)
+                        const t1 = document.getElementById('status-task1');
+                        if (data.tasks && data.tasks.task1 === true) {
+                            t1.innerText = "Завершено";
+                            t1.style.color = "#2ecc71";
+                        } else {
+                            t1.innerText = "Еще осталось";
+                            t1.style.color = "red";
+                        }
+
+                        const t2 = document.getElementById('status-task2');
+                        if (data.tasks && data.tasks.task2 === true) {
+                            t2.innerText = "Завершено";
+                            t2.style.color = "#2ecc71";
+                        } else {
+                            t2.innerText = "Еще осталось";
+                            t2.style.color = "red";
+                        }
+                    }
+                });
+            } else {
+                window.location.href = "index.html";
             }
         });
     </script>
