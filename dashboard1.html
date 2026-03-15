@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RGH Dashboard - My Page</title>
+    <title>RGH Dashboard</title>
     <style>
         body {
             margin: 0;
@@ -12,7 +12,7 @@
             color: #333;
         }
 
-        /* Header */
+        /* Header-ը նկարիդ նման */
         .header {
             background: white;
             height: 60px;
@@ -38,10 +38,11 @@
             font-size: 16px;
         }
 
+        /* Կլորիկ սիմվոլները (Level, Coins) */
         .circle-icon {
             width: 32px;
             height: 32px;
-            background: #fdf2d0; 
+            background: #fdf2d0; /* Դեղնավուն ֆոն */
             border: 1px solid #d4af37;
             border-radius: 50%;
             display: flex;
@@ -65,7 +66,7 @@
             background: #eee;
         }
 
-        /* Main Content */
+        /* Խաղերի ցուցակը (Bedwars և այլն) */
         .main-content {
             padding: 40px 50px;
             max-width: 1000px;
@@ -85,12 +86,13 @@
         .game-thumb {
             width: 180px;
             height: 180px;
+            background: #333;
             border-radius: 8px;
             object-fit: cover;
         }
 
         .game-details h2 { margin: 0; font-size: 32px; }
-        .game-status { font-size: 14px; margin: 10px 0; font-weight: bold; }
+        .game-status { color: #2ecc71; font-size: 14px; margin: 10px 0; }
 
         .btn-connect {
             background: #393b3d;
@@ -111,7 +113,7 @@
         
         <div class="stats-container">
             <div class="stat-item">
-                <div class="circle-icon" style="background: #efefef; border-radius: 3px; border-color: #ccc;">1</div>
+                <div class="circle-icon" style="background: #efefef; border-radius: 3px;">1</div>
                 <span>Уровень: <b id="dispLevel">--</b></span>
             </div>
             
@@ -123,7 +125,7 @@
 
         <div class="profile-section">
             <img src="https://tr.rbxcdn.com/38c353381a3e62f02697b055d7877259/420/420/Avatar/Png" class="avatar-img" alt="Avatar">
-            <span id="userName">Loading...</span>
+            <span id="userName">haykkingbro</span>
         </div>
     </div>
 
@@ -132,7 +134,7 @@
             <img src="https://tr.rbxcdn.com/18791039f67a29486c35c8e3128919f4/420/420/Image/Png" class="game-thumb">
             <div class="game-details">
                 <h2>Bedwars</h2>
-                <div id="status-task1" class="game-status">Ստուգվում է...</div>
+                <div class="game-status">Завершено</div>
                 <button class="btn-connect">Подключиться</button>
             </div>
         </div>
@@ -141,7 +143,7 @@
             <img src="https://tr.rbxcdn.com/15f60641372337d45f448e894c25a17a/420/420/Image/Png" class="game-thumb">
             <div class="game-details">
                 <h2>Legends Of Speed</h2>
-                <div id="status-task2" class="game-status">Ստուգվում է...</div>
+                <div class="game-status" style="color: red;">Еще осталось</div>
                 <button class="btn-connect">Подключиться</button>
             </div>
         </div>
@@ -164,38 +166,14 @@
         const auth = getAuth(app);
         const db = getDatabase(app);
 
-        // Սա քո UID-ն է, որը dashboard1-ը միշտ կկարդա
-        const MY_UID = "D08Zx64RABbI3ETaXu31TMIYeWk2";
-
         onAuthStateChanged(auth, (user) => {
             if (user) {
-                const userRef = ref(db, 'users/' + MY_UID);
+                const userRef = ref(db, 'users/' + user.uid);
                 onValue(userRef, (snapshot) => {
                     const data = snapshot.val();
                     if (data) {
-                        // Թարմացնում ենք թվերը
-                        document.getElementById('dispCoins').innerText = data.coins || 0;
-                        document.getElementById('dispLevel').innerText = data.level || 1;
-                        document.getElementById('userName').innerText = data.username || "haykkingbro";
-
-                        // Խաղերի կարգավիճակը (tasks)
-                        const t1 = document.getElementById('status-task1');
-                        if (data.tasks && data.tasks.task1 === true) {
-                            t1.innerText = "Завершено";
-                            t1.style.color = "#2ecc71";
-                        } else {
-                            t1.innerText = "Еще осталось";
-                            t1.style.color = "red";
-                        }
-
-                        const t2 = document.getElementById('status-task2');
-                        if (data.tasks && data.tasks.task2 === true) {
-                            t2.innerText = "Завершено";
-                            t2.style.color = "#2ecc71";
-                        } else {
-                            t2.innerText = "Еще осталось";
-                            t2.style.color = "red";
-                        }
+                        document.getElementById('dispCoins').innerText = data.coins;
+                        document.getElementById('dispLevel').innerText = data.level;
                     }
                 });
             } else {
