@@ -55,17 +55,31 @@
         const auth = getAuth(app);
 
         onAuthStateChanged(auth, (user) => {
-            if (user) {
-                onValue(ref(db, 'users/' + user.uid), (snapshot) => {
-                    const data = snapshot.val();
-                    if (data) {
-                        document.getElementById('dispName').innerText = data.username || "Player";
-                        document.getElementById('dispCoins').innerText = data.coins || 0;
-                        renderGames(data.tasks || {});
-                    }
-                });
+    if (user) {
+        const userRef = ref(db, 'users/' + user.uid);
+        onValue(userRef, (snapshot) => {
+            const data = snapshot.val();
+            if (data) {
+                // Տվյալների արտացոլում
+                document.getElementById('dispName').innerText = data.username || "Игрок";
+                document.getElementById('dispCoins').innerText = data.coins || 0;
+                document.getElementById('dispLevel').innerText = data.level || 1; // Եթե չկա, դնում է 1
+                
+                // Եթե ունես Rank-ի տեղ, կարող ես սա էլ ավելացնել
+                if(document.getElementById('dispRank')) {
+                    document.getElementById('dispRank').innerText = data.rank || "Новичок";
+                }
+
+                renderGames(data.tasks || {});
+            } else {
+                // Եթե օգտատերը բազայում ընդհանրապես չկա
+                console.log("Տվյալները բացակայում են բազայից:");
             }
         });
+    } else {
+        window.location.href = "index.html";
+    }
+});
 
         function renderGames(tasks) {
             const gameList = document.getElementById('gameList');
