@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="hy">
+<head>
+    <meta charset="UTF-8">
+    <title>Dashboard</title>
+</head>
+<body>
+
+    <h2>Խաղացողի տվյալներ</h2>
+    <p>Քոյիններ: <span id="dispCoins">--</span></p>
+    <p>Մակարդակ: <span id="dispLevel">--</span></p>
+    <p>Ռանգ: <span id="dispRank">--</span></p>
+    
+    <hr>
+    <div id="status">Միանում է...</div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDMX2P4uPPL1N2dsh0qEW57rjZc1Z-pyXs",
+            authDomain: "mrgh-game.firebaseapp.com",
+            databaseURL: "https://mrgh-game-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: "mrgh-game",
+            storageBucket: "mrgh-game.firebasestorage.app",
+            messagingSenderId: "866665514728",
+            appId: "1:866665514728:web:d5179ce6836828531a2b5d"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getDatabase(app);
+
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                // Կապվում ենք բազայի այն UID-ի հետ, որը նկարումդ կար
+                const userRef = ref(db, 'users/' + user.uid);
+                
+                onValue(userRef, (snapshot) => {
+                    const data = snapshot.val();
+                    if (data) {
+                        document.getElementById('dispCoins').innerText = data.coins;
+                        document.getElementById('dispLevel').innerText = data.level;
+                        document.getElementById('dispRank').innerText = data.rank || "Չկա";
+                        document.getElementById('status').innerText = "Կապը հաստատված է ✅";
+                    } else {
+                        document.getElementById('status').innerText = "Տվյալ չկա (ստուգիր UID-ն) ❌";
+                    }
+                });
+            } else {
+                document.getElementById('status').innerText = "Մուտք գործած չես ❌";
+            }
+        });
+    </script>
+</body>
+</html>
