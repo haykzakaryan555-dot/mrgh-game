@@ -2,57 +2,88 @@
 <html lang="hy">
 <head>
     <meta charset="UTF-8">
-    <title>Dashboard</title>
+    <title>RGH - Dashboard</title>
+    <style>
+        body { margin: 0; font-family: sans-serif; background: #f2f4f5; }
+        .header { background: white; height: 65px; display: flex; align-items: center; justify-content: space-around; border-bottom: 1px solid #ddd; }
+        .stat-icon { width: 35px; height: 35px; border-radius: 50%; background: #fdf2d0; border: 1px solid #d4af37; display: flex; align-items: center; justify-content: center; font-weight: bold; }
+        .game-card { background: white; margin: 20px auto; max-width: 800px; padding: 20px; border-radius: 8px; display: flex; gap: 20px; border: 1px solid #e3e3e3; }
+        .game-img { width: 150px; height: 150px; border-radius: 8px; object-fit: cover; }
+        .status-ok { color: #2ecc71; font-weight: bold; }
+        .status-wait { color: #e74c3c; font-weight: bold; }
+        .btn-play { background: #393b3d; color: white; border: none; padding: 10px 30px; border-radius: 4px; cursor: pointer; }
+    </style>
 </head>
 <body>
 
-    <h2>Խաղացողի տվյալներ</h2>
-    <p>Քոյիններ: <span id="dispCoins">--</span></p>
-    <p>Մակարդակ: <span id="dispLevel">--</span></p>
-    <p>Ռանգ: <span id="dispRank">--</span></p>
-    
-    <hr>
-    <div id="status">Միանում է...</div>
+    <div class="header">
+        <div style="font-weight: bold;">RGH</div>
+        <div style="display: flex; gap: 30px;">
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <div class="stat-icon" style="background:#eee; border-color:#ccc;">1</div> 
+                Уровень: <span id="dispLevel">--</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <div class="stat-icon">C</div> 
+                <span id="dispCoins">--</span>
+            </div>
+        </div>
+        <div style="display: flex; align-items: center; gap: 10px;">
+            <img src="https://tr.rbxcdn.com/38c353381a3e62f02697b055d7877259/420/420/Avatar/Png" width="40" style="border-radius:5px;">
+            <span id="dispName">--</span>
+        </div>
+    </div>
+
+    <div id="gameList"></div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
         import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
-        const firebaseConfig = {
-            apiKey: "AIzaSyDMX2P4uPPL1N2dsh0qEW57rjZc1Z-pyXs",
-            authDomain: "mrgh-game.firebaseapp.com",
-            databaseURL: "https://mrgh-game-default-rtdb.europe-west1.firebasedatabase.app",
-            projectId: "mrgh-game",
-            storageBucket: "mrgh-game.firebasestorage.app",
-            messagingSenderId: "866665514728",
-            appId: "1:866665514728:web:d5179ce6836828531a2b5d"
-        };
-
+        const firebaseConfig = { /* ... նույն քո Config-ը ... */ };
         const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
         const db = getDatabase(app);
+        const auth = getAuth(app);
 
         onAuthStateChanged(auth, (user) => {
             if (user) {
-                // Կապվում ենք բազայի այն UID-ի հետ, որը նկարումդ կար
-                const userRef = ref(db, 'users/' + user.uid);
-                
-                onValue(userRef, (snapshot) => {
+                onValue(ref(db, 'users/' + user.uid), (snapshot) => {
                     const data = snapshot.val();
                     if (data) {
                         document.getElementById('dispCoins').innerText = data.coins;
                         document.getElementById('dispLevel').innerText = data.level;
-                        document.getElementById('dispRank').innerText = data.rank || "Չկա";
-                        document.getElementById('status').innerText = "Կապը հաստատված է ✅";
-                    } else {
-                        document.getElementById('status').innerText = "Տվյալ չկա (ստուգիր UID-ն) ❌";
+                        document.getElementById('dispName').innerText = data.username || "Player";
+                        renderGames(data.tasks || {});
                     }
                 });
-            } else {
-                document.getElementById('status').innerText = "Մուտք գործած չես ❌";
             }
         });
+
+        function renderGames(userTasks) {
+            const games = [
+                { id: "tower", name: "Tower Battles", img: "https://tr.rbxcdn.com/18791039f67a29486c35c8e3128919f4/420/420/Image/Png", reqs: ["task1", "task2", "task3"] }
+            ];
+
+            const list = document.getElementById('gameList');
+            list.innerHTML = "";
+            
+            games.forEach(game => {
+                const allDone = game.reqs.every(taskId => userTasks[taskId] === true);
+                list.innerHTML += `
+                    <div class="game-card">
+                        <img src="${game.img}" class="game-img">
+                        <div>
+                            <h2>${game.name}</h2>
+                            <p class="${allDone ? 'status-ok' : 'status-wait'}">
+                                ${allDone ? 'Завершено' : 'Еще осталось'}
+                            </p>
+                            <button class="btn-play">Подключиться</button>
+                        </div>
+                    </div>
+                `;
+            });
+        }
     </script>
 </body>
 </html>
