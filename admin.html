@@ -24,12 +24,14 @@
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
         const firebaseConfig = {
-            apiKey: "AIzaSyDMX2P4uPPL1N2dsh0qEW57rjZc1Z-pyXs",
-            authDomain: "mrgh-game.firebaseapp.com",
-            databaseURL: "https://mrgh-game-default-rtdb.europe-west1.firebasedatabase.app",
-            projectId: "mrgh-game",
-            appId: "1:866665514728:web:d5179ce6836828531a2b5d"
-        };
+    apiKey: "AIzaSyDMX2P4uPPL1N2dsh0qEW57rjZc1Z-pyXs",
+    authDomain: "mrgh-game.firebaseapp.com",
+    databaseURL: "https://mrgh-game-default-rtdb.europe-west1.firebasedatabase.app",
+    projectId: "mrgh-game",
+    storageBucket: "mrgh-game.appspot.com",
+    messagingSenderId: "866665514728",
+    appId: "1:866665514728:web:d5179ce6836828531a2b5d"
+};
 
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
