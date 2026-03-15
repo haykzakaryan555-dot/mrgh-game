@@ -2,21 +2,20 @@
 <html lang="hy">
 <head>
     <meta charset="UTF-8">
-    <title>RGH - Admin Master Panel</title>
+    <title>RGH - Admin Panel</title>
     <style>
-        body { font-family: sans-serif; background: #f0f2f5; padding: 20px; }
-        .user-card { background: white; padding: 20px; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-        .task-row { display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid #eee; }
-        .btn-pay { background: #2ecc71; color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; font-weight: bold; }
-        .btn-pay:disabled { background: #ccc; cursor: not-allowed; }
-        h3 { margin-top: 0; color: #333; }
-        .stats { color: #666; font-size: 14px; margin-bottom: 15px; }
+        body { font-family: sans-serif; background: #f4f7f6; padding: 20px; }
+        .card { background: white; padding: 15px; border-radius: 8px; margin-bottom: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .user-info { font-weight: bold; border-bottom: 1px solid #eee; padding-bottom: 10px; margin-bottom: 10px; display: flex; justify-content: space-between; }
+        .task-row { display: flex; justify-content: space-between; padding: 8px 0; align-items: center; }
+        .pay-btn { background: #27ae60; color: white; border: none; padding: 5px 15px; border-radius: 4px; cursor: pointer; }
+        .pay-btn:disabled { background: #bdc3c7; }
     </style>
 </head>
 <body>
 
-    <h2>Կառավարման վահանակ (Admin)</h2>
-    <div id="usersContainer"></div>
+    <h2>Ադմինիստրատորի Վահանակ</h2>
+    <div id="adminContent"></div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
@@ -24,77 +23,66 @@
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
         const firebaseConfig = {
-    apiKey: "AIzaSyDMX2P4uPPL1N2dsh0qEW57rjZc1Z-pyXs",
-    authDomain: "mrgh-game.firebaseapp.com",
-    databaseURL: "https://mrgh-game-default-rtdb.europe-west1.firebasedatabase.app",
-    projectId: "mrgh-game",
-    storageBucket: "mrgh-game.appspot.com",
-    messagingSenderId: "866665514728",
-    appId: "1:866665514728:web:d5179ce6836828531a2b5d"
-};
+            apiKey: "AIzaSyDMX2P4uPPL1N2dsh0qEW57rjZc1Z-pyXs",
+            authDomain: "mrgh-game.firebaseapp.com",
+            databaseURL: "https://mrgh-game-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: "mrgh-game",
+            appId: "1:866665514728:web:d5179ce6836828531a2b5d"
+        };
 
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
         const auth = getAuth(app);
 
-        // Առաջադրանքների ցուցակը և իրենց գները
-        const tasksConfig = [
+        // Տեղադրիր քո նոր մեյլի UID-ն այստեղ
+        const ADMIN_UID = "spkeTD1cYBcqE9P3AHdXtmNaqfs2"; 
+
+        const tasks = [
             { id: "task1", label: "Проиграть 1 раз", reward: 10 },
             { id: "task2", label: "Заработать 100 денег", reward: 20 },
             { id: "task3", label: "Выиграть в Co-op", reward: 30 }
         ];
 
         onAuthStateChanged(auth, (user) => {
-            if (user && user.uid === "D08Zx64RABbI3ETaXu31TMIYeWk2") {
-                loadUsers();
+            if (user && user.uid === ADMIN_UID) {
+                loadAllUsers();
             } else {
                 window.location.href = "dashboard.html";
             }
         });
 
-        function loadUsers() {
+        function loadAllUsers() {
             onValue(ref(db, 'users'), (snapshot) => {
                 const users = snapshot.val();
-                const container = document.getElementById('usersContainer');
+                const container = document.getElementById('adminContent');
                 container.innerHTML = "";
 
                 for (let uid in users) {
-                    const u = users[uid];
-                    const card = document.createElement('div');
-                    card.className = 'user-card';
-                    card.innerHTML = `
-                        <h3>${u.username || 'Անանուն'}</h3>
-                        <div class="stats">Coins: <b>${u.coins}</b> | Level: <b>${u.level}</b></div>
-                        <div id="tasks-${uid}"></div>
-                    `;
-                    container.appendChild(card);
-
-                    const tasksDiv = document.getElementById(`tasks-${uid}`);
-                    tasksConfig.forEach(task => {
-                        const isDone = u.tasks && u.tasks[task.id];
-                        const row = document.createElement('div');
-                        row.className = 'task-row';
-                        row.innerHTML = `
-                            <span>${task.label} (<b>+${task.reward} 🪙</b>)</span>
-                            <button class="btn-pay" ${isDone ? 'disabled' : ''} 
-                                onclick="payTask('${uid}', '${task.id}', ${task.reward})">
-                                ${isDone ? 'Վճարված է' : 'Վճարել'}
-                            </button>
-                        `;
-                        tasksDiv.appendChild(row);
+                    let u = users[uid];
+                    let card = document.createElement('div');
+                    card.className = 'card';
+                    card.innerHTML = `<div class="user-info"><span>${u.username}</span> <span>Coins: ${u.coins}</span></div>`;
+                    
+                    tasks.forEach(t => {
+                        let isDone = u.tasks && u.tasks[t.id];
+                        card.innerHTML += `
+                            <div class="task-row">
+                                <span>${t.label} (+${t.reward})</span>
+                                <button class="pay-btn" ${isDone ? 'disabled' : ''} onclick="pay('${uid}', '${t.id}', ${t.reward})">
+                                    ${isDone ? 'Վճարված է' : 'Վճարել'}
+                                </button>
+                            </div>`;
                     });
+                    container.appendChild(card);
                 }
             });
         }
 
-        window.payTask = (uid, taskId, reward) => {
+        window.pay = (uid, taskId, amount) => {
             const updates = {};
-            updates[`users/${uid}/tasks/${taskId}`] = true;
-            updates[`users/${uid}/coins`] = increment(reward);
-            
-            update(ref(db), updates).then(() => {
-                alert("Գումարը փոխանցվեց խաղացողին:");
-            });
+            updates[`/users/${uid}/coins`] = increment(amount);
+            updates[`/users/${uid}/tasks/${taskId}`] = true;
+            update(ref(db), updates);
         };
     </script>
 </body>
