@@ -2,45 +2,87 @@
 <html lang="hy">
 <head>
     <meta charset="UTF-8">
-    <title>RGH - Dashboard</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RGH - Player Dashboard</title>
     <style>
-        body { margin: 0; font-family: sans-serif; background: #f2f4f5; }
-        .header { background: white; height: 65px; display: flex; align-items: center; justify-content: space-around; border-bottom: 1px solid #ddd; }
-        .stat-group { display: flex; align-items: center; gap: 8px; }
-        .stat-icon { width: 32px; height: 32px; border-radius: 50%; border: 1px solid #ccc; display: flex; align-items: center; justify-content: center; font-weight: bold; }
-        .user-menu { position: relative; cursor: pointer; display: flex; align-items: center; gap: 10px; }
-        .dropdown { display: none; position: absolute; top: 50px; right: 0; background: white; border: 1px solid #ddd; width: 150px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
-        .dropdown.active { display: block; }
-        .dropdown div { padding: 10px; border-bottom: 1px solid #eee; font-size: 14px; }
-        .game-card { background: white; max-width: 600px; margin: 20px auto; padding: 20px; border-radius: 8px; display: flex; gap: 20px; align-items: center; border: 1px solid #ddd; }
-        .status-ok { color: #2ecc71; font-weight: bold; }
-        .status-wait { color: #e74c3c; font-weight: bold; }
+        body { margin: 0; font-family: 'Segoe UI', sans-serif; background: #f2f4f5; }
+        
+        /* Header & Navigation */
+        .header { background: white; height: 70px; display: flex; align-items: center; justify-content: space-around; border-bottom: 1px solid #ddd; position: sticky; top: 0; z-index: 1000; }
+        
+        .stat-group { display: flex; align-items: center; gap: 10px; font-weight: 600; font-size: 15px; }
+        .stat-icon { width: 35px; height: 35px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; }
+        .coin-icon { background: #fdf2d0; border: 1px solid #d4af37; color: #b8860b; }
+        .lvl-icon { background: #eee; border: 1px solid #ccc; }
+
+        /* User Menu */
+        .user-section { position: relative; cursor: pointer; display: flex; align-items: center; gap: 12px; padding: 5px 15px; border-radius: 8px; transition: 0.2s; }
+        .user-section:hover { background: #f5f5f5; }
+        #userAvatar { width: 42px; height: 42px; border-radius: 6px; object-fit: cover; border: 1px solid #ddd; }
+        
+        .dropdown-menu { 
+            display: none; position: absolute; top: 60px; right: 0; 
+            background: white; border: 1px solid #ddd; border-radius: 5px; 
+            width: 200px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); overflow: hidden;
+        }
+        .dropdown-menu.active { display: block; }
+        .dropdown-item { padding: 12px 15px; border-bottom: 1px solid #eee; font-size: 14px; color: #333; }
+        .dropdown-item:hover { background: #f8f9fa; }
+        .dropdown-item b { color: #555; }
+        .version-info { font-size: 11px; color: #bbb; padding: 10px 15px; background: #fafafa; }
+
+        /* Game Section */
+        .container { max-width: 800px; margin: 30px auto; padding: 0 15px; }
+        .game-card { background: white; border-radius: 10px; border: 1px solid #e0e0e0; display: flex; padding: 25px; margin-bottom: 20px; gap: 25px; align-items: center; transition: 0.3s; }
+        .game-card:hover { transform: translateY(-3px); box-shadow: 0 5px 15px rgba(0,0,0,0.05); }
+        .game-img { width: 130px; height: 130px; border-radius: 12px; object-fit: cover; }
+        .game-info h2 { margin: 0 0 10px 0; font-size: 22px; color: #222; }
+        .status { font-weight: bold; font-size: 14px; margin-bottom: 15px; display: block; }
+        .status-done { color: #2ecc71; }
+        .status-wait { color: #e74c3c; }
+        .btn-play { background: #393b3d; color: white; border: none; padding: 10px 30px; border-radius: 5px; cursor: pointer; font-weight: 500; font-size: 14px; }
     </style>
 </head>
 <body>
+
     <div class="header">
-        <div style="font-weight:bold">RGH</div>
-        <div class="stat-group">
-            <div class="stat-icon" style="background:#fdf2d0; border-color:#d4af37">C</div>
-            <span id="dispCoins">0</span>
+        <div style="font-weight: 800; font-size: 24px; color: #333;">RGH</div>
+        
+        <div style="display: flex; gap: 35px;">
+            <div class="stat-group">
+                <div class="stat-icon lvl-icon">1</div>
+                Уровень: <span id="dispLevel">--</span>
+            </div>
+            <div class="stat-group">
+                <div class="stat-icon coin-icon">C</div>
+                <span id="dispCoins">--</span>
+            </div>
         </div>
-        <div class="user-menu" onclick="document.getElementById('drop').classList.toggle('active')">
-            <span id="dispName">Player</span> ▼
-            <div class="dropdown" id="drop">
-                <div>Промокоды</div>
-                <div>Ранки</div>
-                <div onclick="location.href='index.html'" style="color:red">Выйти</div>
-                <div style="color:#bbb; font-size:10px">Версия 5.0.5</div>
+
+        <div class="user-section" onclick="toggleMenu(event)">
+            <img id="userAvatar" src="https://tr.rbxcdn.com/38c353381a3e62f02697b055d7877259/420/420/Avatar/Png" alt="Avatar">
+            <div style="display: flex; flex-direction: column;">
+                <span id="dispName" style="font-weight: 600;">Player</span>
+                <span id="dispRankHeader" style="font-size: 11px; color: #888;">Rank: --</span>
+            </div>
+            <span style="font-size: 10px; color: #bbb;">▼</span>
+
+            <div class="dropdown-menu" id="userDropdown">
+                <div class="dropdown-item"><b>Ранг:</b> <span id="dispRankMenu">--</span></div>
+                <div class="dropdown-item">Промокоды</div>
+                <div class="dropdown-item" onclick="logout()" style="color: #e74c3c; cursor: pointer;">Выйти</div>
+                <div class="version-info">Версия 5.0.5</div>
             </div>
         </div>
     </div>
 
-    <div id="gameList"></div>
+    <div class="container" id="gameList">
+        </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
-        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyDMX2P4uPPL1N2dsh0qEW57rjZc1Z-pyXs",
@@ -54,45 +96,62 @@
         const db = getDatabase(app);
         const auth = getAuth(app);
 
-        onAuthStateChanged(auth, (user) => {
-    if (user) {
-        const userRef = ref(db, 'users/' + user.uid);
-        onValue(userRef, (snapshot) => {
-            const data = snapshot.val();
-            if (data) {
-                // Տվյալների արտացոլում
-                document.getElementById('dispName').innerText = data.username || "Игрок";
-                document.getElementById('dispCoins').innerText = data.coins || 0;
-                document.getElementById('dispLevel').innerText = data.level || 1; // Եթե չկա, դնում է 1
-                
-                // Եթե ունես Rank-ի տեղ, կարող ես սա էլ ավելացնել
-                if(document.getElementById('dispRank')) {
-                    document.getElementById('dispRank').innerText = data.rank || "Новичок";
-                }
+        // Dropdown Menu ֆունկցիա
+        window.toggleMenu = (e) => {
+            e.stopPropagation();
+            document.getElementById('userDropdown').classList.toggle('active');
+        };
 
-                renderGames(data.tasks || {});
+        window.onclick = () => document.getElementById('userDropdown').classList.remove('active');
+
+        window.logout = () => signOut(auth).then(() => window.location.href = "index.html");
+
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                const userRef = ref(db, 'users/' + user.uid);
+                onValue(userRef, (snapshot) => {
+                    const data = snapshot.val();
+                    if (data) {
+                        // Տվյալների արտացոլում (եթե չկա՝ դնում է Default արժեք)
+                        document.getElementById('dispName').innerText = data.username || "Игрок";
+                        document.getElementById('dispCoins').innerText = data.coins || 0;
+                        document.getElementById('dispLevel').innerText = data.level || 1;
+                        
+                        const rank = data.rank || "Новичок";
+                        document.getElementById('dispRankHeader').innerText = "Rank: " + rank;
+                        document.getElementById('dispRankMenu').innerText = rank;
+
+                        renderGames(data.tasks || {});
+                    }
+                });
             } else {
-                // Եթե օգտատերը բազայում ընդհանրապես չկա
-                console.log("Տվյալները բացակայում են բազայից:");
+                window.location.href = "index.html";
             }
         });
-    } else {
-        window.location.href = "index.html";
-    }
-});
 
-        function renderGames(tasks) {
-            const gameList = document.getElementById('gameList');
-            const game = { id: "task1", name: "Tower Battles", img: "https://tr.rbxcdn.com/18791039f67a29486c35c8e3128919f4/420/420/Image/Png" };
-            const isDone = tasks[game.id] === true;
-            gameList.innerHTML = `
-                <div class="game-card">
-                    <img src="${game.img}" width="100">
-                    <div>
-                        <h3>${game.name}</h3>
-                        <p class="${isDone ? 'status-ok' : 'status-wait'}">${isDone ? 'Завершено' : 'Еще осталось'}</p>
+        function renderGames(userTasks) {
+            const games = [
+                { id: "task1", name: "Tower Battles", img: "https://tr.rbxcdn.com/18791039f67a29486c35c8e3128919f4/420/420/Image/Png" }
+            ];
+
+            const list = document.getElementById('gameList');
+            list.innerHTML = "";
+            
+            games.forEach(game => {
+                const isDone = userTasks[game.id] === true;
+                list.innerHTML += `
+                    <div class="game-card">
+                        <img src="${game.img}" class="game-img">
+                        <div class="game-info">
+                            <h2>${game.name}</h2>
+                            <span class="status ${isDone ? 'status-done' : 'status-wait'}">
+                                ${isDone ? '● Завершено' : '● Еще осталось'}
+                            </span>
+                            <button class="btn-play">Подключиться</button>
+                        </div>
                     </div>
-                </div>`;
+                `;
+            });
         }
     </script>
 </body>
