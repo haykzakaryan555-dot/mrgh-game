@@ -12,10 +12,10 @@
 </head>
 <body>
     <div class="login-box">
-        <h2>RGH Մուտք</h2>
+        <h2>RGH Login</h2>
         <input type="email" id="email" placeholder="Email">
         <input type="password" id="pass" placeholder="Password">
-        <button id="loginBtn">Մուտք գործել</button>
+        <button id="loginBtn">Մուտք</button>
     </div>
 
     <script type="module">
@@ -32,13 +32,18 @@
 
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
-        const ADMIN_UID = "D08Zx64RABbI3ETaXu31TMIYeWk2"; // Փոխիր քո նոր մեյլի UID-ով
+
+        // ՔՈ ԵՎ ԱԴՄԻՆԻ UID-ՆԵՐԸ
+        const MY_UID = "D08Zx64RABbI3ETaXu31TMIYeWk2"; // Քո UID-ն
+        const ADMIN_UID = "D08Zx64RABbI3ETaXu31TMIYeWk2"; // Այստեղ դիր Ադմինի նոր UID-ն
 
         document.getElementById('loginBtn').onclick = () => {
             const email = document.getElementById('email').value;
             const pass = document.getElementById('pass').value;
+
             signInWithEmailAndPassword(auth, email, pass).then((userCredential) => {
-                if (userCredential.user.uid === ADMIN_UID) {
+                const user = userCredential.user;
+                if (user.uid === ADMIN_UID) {
                     window.location.href = "admin.html";
                 } else {
                     window.location.href = "dashboard.html";
