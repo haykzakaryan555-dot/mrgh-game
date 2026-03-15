@@ -2,43 +2,48 @@
 <html lang="hy">
 <head>
     <meta charset="UTF-8">
-    <title>Մուտք</title>
+    <title>RGH - Login</title>
+    <style>
+        body { font-family: sans-serif; background: #f0f2f5; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .login-box { background: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); width: 300px; text-align: center; }
+        input { width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box; }
+        button { width: 100%; padding: 10px; background: #393b3d; color: white; border: none; border-radius: 5px; cursor: pointer; }
+    </style>
 </head>
 <body>
-    <h2>Մուտք դեպի խաղ</h2>
-    <input type="email" id="email" placeholder="Էլ. փոստ"><br><br>
-    <input type="password" id="pass" placeholder="Գաղտնաբառ"><br><br>
-    <button id="btnLogin">Մուտք գործել</button>
-
-    <p id="msg" style="color: red;"></p>
+    <div class="login-box">
+        <h2>RGH Մուտք</h2>
+        <input type="email" id="email" placeholder="Email">
+        <input type="password" id="pass" placeholder="Password">
+        <button id="loginBtn">Մուտք գործել</button>
+    </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
-        // Քո Firebase-ի տվյալները
         const firebaseConfig = {
             apiKey: "AIzaSyDMX2P4uPPL1N2dsh0qEW57rjZc1Z-pyXs",
             authDomain: "mrgh-game.firebaseapp.com",
+            databaseURL: "https://mrgh-game-default-rtdb.europe-west1.firebasedatabase.app",
             projectId: "mrgh-game",
             appId: "1:866665514728:web:d5179ce6836828531a2b5d"
         };
 
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
+        const ADMIN_UID = "D08Zx64RABbI3ETaXu31TMIYeWk2"; // Փոխիր քո նոր մեյլի UID-ով
 
-        document.getElementById('btnLogin').onclick = () => {
+        document.getElementById('loginBtn').onclick = () => {
             const email = document.getElementById('email').value;
             const pass = document.getElementById('pass').value;
-
-            signInWithEmailAndPassword(auth, email, pass)
-                .then(() => {
-                    // Եթե մուտքը հաջողվեց, տանում է դեպի dashboard
+            signInWithEmailAndPassword(auth, email, pass).then((userCredential) => {
+                if (userCredential.user.uid === ADMIN_UID) {
+                    window.location.href = "admin.html";
+                } else {
                     window.location.href = "dashboard.html";
-                })
-                .catch((error) => {
-                    document.getElementById('msg').innerText = "Սխալ մեյլ կամ գաղտնաբառ";
-                });
+                }
+            }).catch(err => alert("Սխալ: " + err.message));
         };
     </script>
 </body>
