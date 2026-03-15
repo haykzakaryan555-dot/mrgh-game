@@ -4,18 +4,15 @@
     <meta charset="UTF-8">
     <title>RGH - Admin Panel</title>
     <style>
-        body { font-family: sans-serif; background: #f4f7f6; padding: 20px; }
-        .card { background: white; padding: 15px; border-radius: 8px; margin-bottom: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        .user-info { font-weight: bold; border-bottom: 1px solid #eee; padding-bottom: 10px; margin-bottom: 10px; display: flex; justify-content: space-between; }
-        .task-row { display: flex; justify-content: space-between; padding: 8px 0; align-items: center; }
-        .pay-btn { background: #27ae60; color: white; border: none; padding: 5px 15px; border-radius: 4px; cursor: pointer; }
-        .pay-btn:disabled { background: #bdc3c7; }
+        body { font-family: sans-serif; padding: 20px; background: #f4f4f4; }
+        .card { background: white; padding: 15px; margin-bottom: 10px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        button { background: #27ae60; color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; }
+        button:disabled { background: #ccc; }
     </style>
 </head>
 <body>
-
-    <h2>Ադմինիստրատորի Վահանակ</h2>
-    <div id="adminContent"></div>
+    <h2>Admin Management</h2>
+    <div id="users"></div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
@@ -33,56 +30,35 @@
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
         const auth = getAuth(app);
-
-        // Տեղադրիր քո նոր մեյլի UID-ն այստեղ
-        const ADMIN_UID = "spkeTD1cYBcqE9P3AHdXtmNaqfs2"; 
-
-        const tasks = [
-            { id: "task1", label: "Проиграть 1 раз", reward: 10 },
-            { id: "task2", label: "Заработать 100 денег", reward: 20 },
-            { id: "task3", label: "Выиграть в Co-op", reward: 30 }
-        ];
+        const ADMIN_UID = "D08Zx64RABbI3ETaXu31TMIYeWk2";
 
         onAuthStateChanged(auth, (user) => {
             if (user && user.uid === ADMIN_UID) {
-                loadAllUsers();
-            } else {
-                window.location.href = "dashboard.html";
-            }
-        });
-
-        function loadAllUsers() {
-            onValue(ref(db, 'users'), (snapshot) => {
-                const users = snapshot.val();
-                const container = document.getElementById('adminContent');
-                container.innerHTML = "";
-
-                for (let uid in users) {
-                    let u = users[uid];
-                    let card = document.createElement('div');
-                    card.className = 'card';
-                    card.innerHTML = `<div class="user-info"><span>${u.username}</span> <span>Coins: ${u.coins}</span></div>`;
-                    
-                    tasks.forEach(t => {
-                        let isDone = u.tasks && u.tasks[t.id];
-                        card.innerHTML += `
-                            <div class="task-row">
-                                <span>${t.label} (+${t.reward})</span>
-                                <button class="pay-btn" ${isDone ? 'disabled' : ''} onclick="pay('${uid}', '${t.id}', ${t.reward})">
-                                    ${isDone ? 'Վճարված է' : 'Վճարել'}
+                onValue(ref(db, 'users'), (snapshot) => {
+                    const users = snapshot.val();
+                    const container = document.getElementById('users');
+                    container.innerHTML = "";
+                    for (let uid in users) {
+                        const u = users[uid];
+                        const isDone = u.tasks && u.tasks.task1;
+                        container.innerHTML += `
+                            <div class="card">
+                                <b>${u.username}</b> (Coins: ${u.coins})<br><br>
+                                Tower Battles: 
+                                <button ${isDone ? 'disabled' : ''} onclick="window.pay('${uid}')">
+                                    ${isDone ? 'Վճարված' : 'Վճարել 100 🪙'}
                                 </button>
                             </div>`;
-                    });
-                    container.appendChild(card);
-                }
-            });
-        }
+                    }
+                });
+            } else { window.location.href = "dashboard.html"; }
+        });
 
-        window.pay = (uid, taskId, amount) => {
+        window.pay = (uid) => {
             const updates = {};
-            updates[`/users/${uid}/coins`] = increment(amount);
-            updates[`/users/${uid}/tasks/${taskId}`] = true;
-            update(ref(db), updates);
+            updates[`users/${uid}/coins`] = increment(100);
+            updates[`users/${uid}/tasks/task1`] = true;
+            update(ref(db), updates).then(() => alert("Փողը ուղարկվեց:"));
         };
     </script>
 </body>
