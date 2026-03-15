@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="hy">
+<head>
+    <meta charset="UTF-8">
+    <title>Մուտք</title>
+</head>
+<body>
+    <h2>Մուտք դեպի խաղ</h2>
+    <input type="email" id="email" placeholder="Էլ. փոստ"><br><br>
+    <input type="password" id="pass" placeholder="Գաղտնաբառ"><br><br>
+    <button id="btnLogin">Մուտք գործել</button>
+
+    <p id="msg" style="color: red;"></p>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+
+        // Քո Firebase-ի տվյալները
+        const firebaseConfig = {
+            apiKey: "AIzaSyDMX2P4uPPL1N2dsh0qEW57rjZc1Z-pyXs",
+            authDomain: "mrgh-game.firebaseapp.com",
+            projectId: "mrgh-game",
+            appId: "1:866665514728:web:d5179ce6836828531a2b5d"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+
+        document.getElementById('btnLogin').onclick = () => {
+            const email = document.getElementById('email').value;
+            const pass = document.getElementById('pass').value;
+
+            signInWithEmailAndPassword(auth, email, pass)
+                .then(() => {
+                    // Եթե մուտքը հաջողվեց, տանում է դեպի dashboard
+                    window.location.href = "dashboard.html";
+                })
+                .catch((error) => {
+                    document.getElementById('msg').innerText = "Սխալ մեյլ կամ գաղտնաբառ";
+                });
+        };
+    </script>
+</body>
+</html>
