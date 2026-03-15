@@ -38,21 +38,18 @@
             const pass = document.getElementById('pass').value;
 
             signInWithEmailAndPassword(auth, email, pass).then((userCredential) => {
-                const user = userCredential.user;
-                
-                // ՔՈ ԵՎ ԸՆԿԵՐՆԵՐԻԴ UID-ՆԵՐԸ
-                const MY_UID = "D08Zx64RABbI3ETaXu31TMIYeWk2"; // Քո UID-ն
-                const ADMIN_UID = "ԱՅՍՏԵՂ_ԳՐԻՐ_ԱԴՄԻՆԻ_UID_Ն";
+                const uid = userCredential.user.uid;
 
-                if (user.uid === ADMIN_UID) {
+                const ADMIN_UID = "ԴԻՐ_ԱԴՄԻՆԻ_UID_Ն_ԱՅՍՏԵՂ";
+                const FRIEND_UID = "ԴԻՐ_ԸՆԿԵՐՈՋ_UID_Ն_ԱՅՍՏԵՂ";
+
+                if (uid === ADMIN_UID) {
                     window.location.href = "admin.html";
-                } else if (user.uid === MY_UID) {
-                    window.location.href = "dashboard1.html"; // Քո առանձին էջը
-                } else if (user.uid === "ԸՆԿԵՐՈՋ_2_UID") {
-                    window.location.href = "dashboard2.html"; // Ընկերոջդ էջը
+                } else if (uid === FRIEND_UID) {
+                    window.location.href = "dashboard2.html";
                 } else {
-                    // Եթե ցուցակում չկա, գցում ենք ընդհանուր dashboard.html
-                    window.location.href = "dashboard.html";
+                    // Քեզ հաստատ կգցի քո հիմնական էջը, ոչ մի guest
+                    window.location.href = "dashboard1.html";
                 }
             }).catch(err => alert("Սխալ: " + err.message));
         };
