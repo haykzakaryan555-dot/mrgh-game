@@ -63,17 +63,20 @@
                 // --- ՈՒՂՂՈՐԴՄԱՆ ՏՐԱՄԱԲԱՆՈՒԹՅՈՒՆԸ ---
                 
                 const MY_UID = "SOHqHyiFeEVu2lp2uwBAq6ZQ06N2"; // Քո UID-ն
-                const ADMIN_UID = "EQwgbSiI8He58MjrCune8jpc0eG2"; // <--- ԱԴՄԻՆԻՆԸ ՍՏԵՂ ԴԻՐ
+                const ADMIN_UID = "EQwgbSiI8He58MjrCune8jpc0eG2"; // Ադմինի UID-ն
+                const FRIEND_UID = "PCLsbIRHVoMKwFA1bWmNbbk3x4p1"; // <--- Ընկերոջդ UID-ն (գտիր Firebase-ից)
 
-                if (uid === MY_UID) {
-                    window.location.href = "dashboard1.html";
-                } else if (uid === ADMIN_UID) {
-                    window.location.href = "admin.html";
-                } else {
-                    // Եթե ուրիշ user է (dashboard2, dashboard3 և այլն)
-                    // Առայժմ գցում ենք dashboard2, հետո կավելացնես ըստ UID-ների
-                    window.location.href = "dashboard2.html";
-                }
+if (uid === MY_UID) {
+    window.location.href = "dashboard1.html";
+} else if (uid === ADMIN_UID) {
+    window.location.href = "admin.html";
+} else if (uid === FRIEND_UID) {
+    // Եթե ընկերդ է մտնում, նրան գցում է իր էջը
+    window.location.href = "dashboard2.html";
+} else {
+    // Մնացած բոլորի համար (եթե ունես այլ էջեր)
+    window.location.href = "dashboard3.html"; 
+}
 
             } catch (error) {
                 console.error("Login Error:", error);
