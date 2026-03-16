@@ -134,7 +134,22 @@
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
     import { getDatabase, ref, onValue, set, get, update } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
+const auth = getAuth(app);
+const currentUid = "SOHqHyiFeEVu2lp2uwBAq6ZQ06N2"; // Քո UID-ն
+
+// ՊԱՀԱԿԸ
+onAuthStateChanged(auth, (user) => {
+    if (!user) {
+        // Եթե լոգին չի եղել, վռնդում ենք
+        window.location.href = "index.html";
+    } else if (user.uid !== currentUid) {
+        // Եթե ուրիշն է փորձում մտնել քո հղումով
+        alert("Մուտքն արգելված է։ Սա ձեր էջը չէ։");
+        window.location.href = "index.html";
+    }
+});
     const firebaseConfig = {
         apiKey: "AIzaSyDMX2P4uPPL1N2dsh0qEW57rjZc1Z-pyXs",
         authDomain: "mrgh-game.firebaseapp.com",
@@ -155,7 +170,7 @@
     function getLevelCost(currentLevel) {
         return currentLevel * 50; // Օրինակ՝ լևել 1-ից 2 արժե 50, 2-ից 3՝ 100։
     }
-    const RANK_UPGRADE_COST = 500; // Ռանգի գինը
+    const RANK_UPGRADE_COST = 1000; // Ռանգի գինը
 
     // 1. Բեռնում ենք Օգտատիրոջ Տվյալները (Header)
     onValue(ref(db, `users/${currentUid}`), (snapshot) => {
