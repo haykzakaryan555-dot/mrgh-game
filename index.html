@@ -2,19 +2,22 @@
 <html lang="hy">
 <head>
     <meta charset="UTF-8">
-    <title>RGH - Login</title>
+    <title>RGH - Գլխավոր Մուտք</title>
     <style>
-        body { font-family: sans-serif; background: #f0f2f5; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
-        .login-box { background: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); width: 300px; text-align: center; }
-        input { width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box; }
-        button { width: 100%; padding: 10px; background: #393b3d; color: white; border: none; border-radius: 5px; cursor: pointer; }
+        body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .login-box { background: white; padding: 35px 30px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); width: 320px; text-align: center; border: 1px solid #e3e3e3; }
+        .logo { font-size: 24px; font-weight: bold; color: #333; margin-bottom: 25px; }
+        input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; font-size: 14px; }
+        input:focus { outline: none; border-color: #393b3d; }
+        button { width: 100%; padding: 12px; background: #393b3d; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 16px; font-weight: bold; margin-top: 15px; }
+        button:hover { background: #222; }
     </style>
 </head>
 <body>
     <div class="login-box">
-        <h2>RGH System</h2>
-        <input type="email" id="email" placeholder="Email">
-        <input type="password" id="pass" placeholder="Password">
+        <div class="logo">RGH SYSTEM</div>
+        <input type="email" id="email" placeholder="Էլ. հասցե">
+        <input type="password" id="pass" placeholder="Գաղտնաբառ">
         <button id="loginBtn">Մուտք</button>
     </div>
 
@@ -40,18 +43,31 @@
             signInWithEmailAndPassword(auth, email, pass).then((userCredential) => {
                 const uid = userCredential.user.uid;
 
-                const ADMIN_UID = "ԴԻՐ_ԱԴՄԻՆԻ_UID_Ն_ԱՅՍՏԵՂ";
-                const FRIEND_UID = "ԴԻՐ_ԸՆԿԵՐՈՋ_UID_Ն_ԱՅՍՏԵՂ";
-
-                if (uid === ADMIN_UID) {
-                    window.location.href = "admin.html";
-                } else if (uid === FRIEND_UID) {
-                    window.location.href = "dashboard2.html";
-                } else {
-                    // Քեզ հաստատ կգցի քո հիմնական էջը, ոչ մի guest
+                // Այստեղ կատարվում է ուղղորդումը ըստ UID-ների
+                if (uid === "D08Zx64RABbI3ETaXu31TMIYeWk2") {
+                    // Սա քո էջն է
                     window.location.href = "dashboard1.html";
+                } 
+                else if (uid === "spkeTD1cYBcqE9P3AHdXtmNaqfs2") {
+                    // Ադմինի էջը
+                    window.location.href = "admin.html";
+                } 
+                else if (uid === "ԸՆԿԵՐ_1_UID_ԱՅՍՏԵՂ") {
+                    // Ընկերոջդ էջը
+                    window.location.href = "dashboard2.html";
                 }
-            }).catch(err => alert("Սխալ: " + err.message));
+                else if (uid === "ԸՆԿԵՐ_2_UID_ԱՅՍՏԵՂ") {
+                    // Մյուս ընկերոջդ էջը
+                    window.location.href = "dashboard3.html";
+                }
+                else {
+                    // Եթե այնպիսի մարդ է մտել, ում UID-ն վերևում չկա
+                    alert("Մուտքը հաստատված է, բայց ձեր անձնական էջը դեռ պատրաստ չէ։");
+                }
+
+            }).catch(err => {
+                alert("Սխալ էլ. հասցե կամ գաղտնաբառ։");
+            });
         };
     </script>
 </body>
