@@ -41,34 +41,35 @@
             const pass = document.getElementById('pass').value;
 
             signInWithEmailAndPassword(auth, email, pass).then((userCredential) => {
-                const uid = userCredential.user.uid;
+    const uid = userCredential.user.uid;
 
-                // Այստեղ կատարվում է ուղղորդումը ըստ UID-ների
-                if (uid === "D08Zx64RABbI3ETaXu31TMIYeWk2") {
-                    // Սա քո էջն է
-                    window.location.href = "dashboard1.html";
-                } 
-                else if (uid === "Ic0XpL2241WgbiMBclfe838HhA52") {
-                    // Ադմինի էջը
-                    window.location.href = "admin.html";
-                } 
-                else if (uid === "ԸՆԿԵՐ_1_UID_ԱՅՍՏԵՂ") {
-                    // Ընկերոջդ էջը
-                    window.location.href = "dashboard2.html";
-                }
-                else if (uid === "ԸՆԿԵՐ_2_UID_ԱՅՍՏԵՂ") {
-                    // Մյուս ընկերոջդ էջը
-                    window.location.href = "dashboard3.html";
-                }
-                else {
-                    // Եթե այնպիսի մարդ է մտել, ում UID-ն վերևում չկա
-                    alert("Մուտքը հաստատված է, բայց ձեր անձնական էջը դեռ պատրաստ չէ։");
-                }
+    // 1. ՍԱ ՔՈ UID-Ն Է (Հայկ)
+    const MY_UID = "D08Zx64RABbI3ETaXu31TMIYeWk2";
+    
+    // 2. ՍԱ ԱԴՄԻՆԻ UID-Ն Է (Փոխիր սա իսկականով)
+    const ADMIN_UID = "Ic0XpL2241WgbiMBclfe838HhA52";
 
-            }).catch(err => {
-                alert("Սխալ էլ. հասցե կամ գաղտնաբառ։");
-            });
-        };
+    if (uid === MY_UID) {
+        // Եթե դու ես՝ գնա քո էջը
+        window.location.href = "dashboard1.html";
+    } 
+    else if (uid === ADMIN_UID) {
+        // Եթե ադմինն է՝ գնա ադմինի էջը
+        window.location.href = "admin.html";
+    } 
+    else if (uid === "ԸՆԿԵՐՈՋ_UID") {
+        // Եթե ընկերդ է՝ գնա dashboard2
+        window.location.href = "dashboard2.html";
+    }
+    else {
+        // Եթե օգտատերը կա բազայում, բայց UID-ն վերևի ցուցակում չկա
+        alert("Մուտքը հաստատված է, բայց ձեր անձնական էջը դեռ պատրաստ չէ։");
+    }
+
+}).catch(err => {
+    alert("Սխալ էլ. հասցե կամ գաղտնաբառ։");
+});
+
     </script>
 </body>
 </html>
