@@ -2,29 +2,34 @@
 <html lang="hy">
 <head>
     <meta charset="UTF-8">
-    <title>RGH - Գլխավոր Մուտք</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RGH - Login System</title>
     <style>
-        body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
-        .login-box { background: white; padding: 35px 30px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); width: 320px; text-align: center; border: 1px solid #e3e3e3; }
-        .logo { font-size: 24px; font-weight: bold; color: #333; margin-bottom: 25px; }
-        input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; font-size: 14px; }
-        input:focus { outline: none; border-color: #393b3d; }
-        button { width: 100%; padding: 12px; background: #393b3d; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 16px; font-weight: bold; margin-top: 15px; }
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background-color: #f2f4f5; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .login-box { background: white; padding: 40px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); width: 100%; max-width: 350px; text-align: center; }
+        h2 { color: #333; margin-bottom: 25px; font-size: 24px; }
+        input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; font-size: 14px; transition: 0.3s; }
+        input:focus { border-color: #393b3d; outline: none; box-shadow: 0 0 5px rgba(0,0,0,0.1); }
+        button { width: 100%; padding: 12px; background: #393b3d; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 16px; font-weight: bold; margin-top: 20px; transition: 0.3s; }
         button:hover { background: #222; }
+        .error-msg { color: #e74c3c; font-size: 13px; margin-top: 10px; display: none; }
     </style>
 </head>
 <body>
+
     <div class="login-box">
-        <div class="logo">RGH SYSTEM</div>
+        <h2>RGH System</h2>
         <input type="email" id="email" placeholder="Էլ. հասցե">
         <input type="password" id="pass" placeholder="Գաղտնաբառ">
-        <button id="loginBtn">Մուտք</button>
+        <button id="loginBtn">ՄՈՒՏՔ</button>
+        <div id="errorBox" class="error-msg"></div>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
+        // Քո Firebase-ի տվյալները
         const firebaseConfig = {
             apiKey: "AIzaSyDMX2P4uPPL1N2dsh0qEW57rjZc1Z-pyXs",
             authDomain: "mrgh-game.firebaseapp.com",
@@ -36,40 +41,59 @@
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
 
-        document.getElementById('loginBtn').onclick = () => {
-            const email = document.getElementById('email').value;
-            const pass = document.getElementById('pass').value;
+        const loginBtn = document.getElementById('loginBtn');
+        const errorBox = document.getElementById('errorBox');
 
-            signInWithEmailAndPassword(auth, email, pass).then((userCredential) => {
-    const uid = userCredential.user.uid;
+        loginBtn.onclick = async () => {
+            const email = document.getElementById('email').value.trim();
+            const pass = document.getElementById('pass').value.trim();
 
-    // 1. ՍԱ ՔՈ UID-Ն Է (Հայկ)
-    const MY_UID = "D08Zx64RABbI3ETaXu31TMIYeWk2";
-    
-    // 2. ՍԱ ԱԴՄԻՆԻ UID-Ն Է (Փոխիր սա իսկականով)
-    const ADMIN_UID = "Ic0XpL2241WgbiMBclfe838HhA52";
+            if (!email || !pass) {
+                showError("Լրացրեք բոլոր դաշտերը");
+                return;
+            }
 
-    if (uid === MY_UID) {
-        // Եթե դու ես՝ գնա քո էջը
-        window.location.href = "dashboard1.html";
-    } 
-    else if (uid === ADMIN_UID) {
-        // Եթե ադմինն է՝ գնա ադմինի էջը
-        window.location.href = "admin.html";
-    } 
-    else if (uid === "ԸՆԿԵՐՈՋ_UID") {
-        // Եթե ընկերդ է՝ գնա dashboard2
-        window.location.href = "dashboard2.html";
-    }
-    else {
-        // Եթե օգտատերը կա բազայում, բայց UID-ն վերևի ցուցակում չկա
-        alert("Մուտքը հաստատված է, բայց ձեր անձնական էջը դեռ պատրաստ չէ։");
-    }
+            loginBtn.innerText = "Ստուգվում է...";
+            loginBtn.disabled = true;
 
-}).catch(err => {
-    alert("Սխալ էլ. հասցե կամ գաղտնաբառ։");
-});
+            try {
+                const userCredential = await signInWithEmailAndPassword(auth, email, pass);
+                const uid = userCredential.user.uid;
 
+                // --- ՈՒՂՂՈՐԴՄԱՆ ՏՐԱՄԱԲԱՆՈՒԹՅՈՒՆԸ ---
+                
+                const MY_UID = "SOHqHyiFeEVu2lp2uwBAq6ZQ06N2"; // Քո UID-ն
+                const ADMIN_UID = "EQwgbSiI8He58MjrCune8jpc0eG2"; // <--- ԱԴՄԻՆԻՆԸ ՍՏԵՂ ԴԻՐ
+
+                if (uid === MY_UID) {
+                    window.location.href = "dashboard1.html";
+                } else if (uid === ADMIN_UID) {
+                    window.location.href = "admin.html";
+                } else {
+                    // Եթե ուրիշ user է (dashboard2, dashboard3 և այլն)
+                    // Առայժմ գցում ենք dashboard2, հետո կավելացնես ըստ UID-ների
+                    window.location.href = "dashboard2.html";
+                }
+
+            } catch (error) {
+                console.error("Login Error:", error);
+                loginBtn.innerText = "ՄՈՒՏՔ";
+                loginBtn.disabled = false;
+                
+                if (error.code === 'auth/network-request-failed') {
+                    showError("Կապի սխալ: Ստուգիր Authorized Domains-ը Firebase-ում");
+                } else if (error.code === 'auth/invalid-credential') {
+                    showError("Սխալ մեյլ կամ գաղտնաբառ");
+                } else {
+                    showError("Սխալ: " + error.message);
+                }
+            }
+        };
+
+        function showError(msg) {
+            errorBox.innerText = msg;
+            errorBox.style.display = "block";
+        }
     </script>
 </body>
 </html>
