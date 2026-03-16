@@ -133,7 +133,7 @@
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { getDatabase, ref, onValue, get, update } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+    import { getDatabase, ref, onValue, set, get, update } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
     const firebaseConfig = {
         apiKey: "AIzaSyDMX2P4uPPL1N2dsh0qEW57rjZc1Z-pyXs",
@@ -145,54 +145,66 @@
 
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
+    
+    // Հայկի UID-ն
     const currentUid = "SOHqHyiFeEVu2lp2uwBAq6ZQ06N2";
-
     let userData = {}; 
-    let globalSettings = { levelPrice: 50, rankPrice: 500 }; 
     let currentGameUrl = "";
 
-    // 1. Կարգավորումների բեռնում Firebase-ից
-    onValue(ref(db, 'settings'), (snapshot) => {
-        if (snapshot.exists()) {
-            globalSettings = snapshot.val();
+    // --- ԿԱՐԳԱՎՈՐՈՒՄՆԵՐ (Upgrade Գներ) ---
+    function getLevelCost(currentLevel) {
+        return currentLevel * 50; // Օրինակ՝ լևել 1-ից 2 արժե 50, 2-ից 3՝ 100։
+    }
+    const RANK_UPGRADE_COST = 500; // Ռանգի գինը
+
+    // 1. Բեռնում ենք Օգտատիրոջ Տվյալները (Header)
+    onValue(ref(db, `users/${currentUid}`), (snapshot) => {
+        userData = snapshot.val();
+        if(userData) {
+            document.getElementById('user-coins').innerText = userData.coins || 0;
+            document.getElementById('user-level').innerText = userData.level || 1;
+            document.getElementById('user-rank').innerText = userData.rank || 1;
+            document.getElementById('user-name').innerText = userData.username || "Player";
+            document.getElementById('user-avatar').src = userData.avatar || "https://via.placeholder.com/50";
         }
     });
 
-    // 2. Օգտատիրոջ տվյալների բեռնում իրական ժամանակում
-    onValue(ref(db, `users/${currentUid}`), (snapshot) => {
-        userData = snapshot.val() || {};
-        document.getElementById('user-coins').innerText = userData.coins || 0;
-        document.getElementById('user-level').innerText = userData.level || 1;
-        document.getElementById('user-rank').innerText = userData.rank || 1;
-        document.getElementById('user-name').innerText = userData.username || "Player";
-        if(userData.avatar) document.getElementById('user-avatar').src = userData.avatar;
-    });
-
-    // 3. Խաղերի և առաջադրանքների ստատուսի բեռնում
+    // 2. Բեռնում ենք Խաղերը
     onValue(ref(db, `users/${currentUid}/games`), (snapshot) => {
         const container = document.getElementById('games-container');
         container.innerHTML = "";
+        
+        if (!snapshot.exists()) {
+            container.innerHTML = "<h3>Пока нет доступных игр.</h3>";
+            return;
+        }
+
         snapshot.forEach((child) => {
             const game = child.val();
             const gameId = child.key;
             
+            // Ստուգում ենք առաջադրանքների ստատուսը
             let allPassed = true;
+            let hasTasks = false;
             let tasksObj = game.tasks || {};
-            let hasTasks = Object.keys(tasksObj).length > 0;
 
-            Object.values(tasksObj).forEach(t => { if(t.status !== 'passed') allPassed = false; });
+            Object.values(tasksObj).forEach(task => {
+                hasTasks = true;
+                if(task.status !== 'passed') allPassed = false;
+            });
 
+            // Եթե տասք չկա կամ բոլորը passed են՝ Завершено (Կանաչ), հակառակ դեպքում՝ Еще осталось (Կարմիր)
             const statusClass = (hasTasks && allPassed) ? 'done' : 'pending';
             const statusText = (hasTasks && allPassed) ? 'Завершено' : 'Еще осталось';
 
             container.innerHTML += `
                 <div class="game-card">
                     <div class="game-info-wrapper">
-                        <img src="${game.image}" class="game-image">
+                        <img src="${game.image}" class="game-image" alt="Game">
                         <div class="game-details">
                             <h2>${game.name}</h2>
                             <div class="status ${statusClass}">${statusText}</div>
-                            <button class="btn" onclick="window.openGameTasks('${gameId}')">Подключиться</button>
+                            <button class="btn" onclick="openGameTasks('${gameId}')">Подключиться</button>
                         </div>
                     </div>
                 </div>
@@ -200,85 +212,111 @@
         });
     });
 
-    // --- Ֆունկցիաներ HTML-ի onclick-ների համար (window. նախդիրով) ---
-
-    window.toggleDropdown = () => {
-        const d = document.getElementById('profile-dropdown');
-        d.style.display = d.style.display === 'block' ? 'none' : 'block';
-    };
-
-    window.closeModals = () => {
-        document.querySelectorAll('.modal-overlay').forEach(m => m.style.display = 'none');
-    };
-
+    // 3. Տասքերի Մոդալի բացում (Подключиться)
     window.openGameTasks = async (gameId) => {
-        const snap = await get(ref(db, `users/${currentUid}/games/${gameId}`));
-        const game = snap.val();
-        currentGameUrl = game.url;
+        const gameSnapshot = await get(ref(db, `users/${currentUid}/games/${gameId}`));
+        const game = gameSnapshot.val();
+        
+        currentGameUrl = game.url; // Պահում ենք լինքը Играть կոճակի համար
         document.getElementById('modal-game-name').innerText = game.name;
         
-        const listDiv = document.getElementById('modal-task-list');
-        listDiv.innerHTML = "";
+        const taskListDiv = document.getElementById('modal-task-list');
+        taskListDiv.innerHTML = "";
+        
         if(game.tasks) {
-            Object.values(game.tasks).forEach(t => {
-                listDiv.innerHTML += `
-                    <div class="task-item ${t.status === 'passed' ? 'passed' : ''}">
-                        <span>→ ${t.desc}</span>
-                        <div style="display:flex; align-items:center; gap:5px;">
-                            <b>${t.cost}</b> <div class="coin-icon" style="width:20px;height:20px;font-size:12px;">C</div>
+            Object.values(game.tasks).forEach(task => {
+                const isPassed = task.status === 'passed';
+                const statusClass = isPassed ? 'passed' : 'pending';
+                
+                taskListDiv.innerHTML += `
+                    <div class="task-item ${statusClass}">
+                        <div class="task-desc">→ ${task.desc} -</div>
+                        <div class="task-reward">
+                            <span>${task.cost}</span>
+                            <div class="coin-icon" style="width:25px;height:25px;font-size:14px;">C</div>
                         </div>
-                    </div>`;
+                    </div>
+                `;
             });
+        } else {
+            taskListDiv.innerHTML = "<p>Нет заданий.</p>";
         }
+
         document.getElementById('tasksModal').style.display = 'flex';
     };
 
-    window.playGame = () => { if(currentGameUrl) window.open(currentGameUrl, '_blank'); };
+    window.playGame = () => {
+        if(currentGameUrl) window.open(currentGameUrl, '_blank');
+    };
 
+    // 4. Upgrade Լոգիկա (Լևել և Ռանգ)
     window.openLevelModal = () => {
-        const cost = userData.level * globalSettings.levelPrice;
+        const cost = getLevelCost(userData.level);
         document.getElementById('level-cost').innerText = cost;
-        document.getElementById('next-lvl-num').innerText = (userData.level || 1) + 1;
         document.getElementById('levelModal').style.display = 'flex';
     };
 
     window.upgradeLevel = async () => {
-        const cost = userData.level * globalSettings.levelPrice;
+        const cost = getLevelCost(userData.level);
         if (userData.coins >= cost) {
             await update(ref(db, `users/${currentUid}`), {
                 coins: userData.coins - cost,
                 level: userData.level + 1
             });
-            window.closeModals();
-        } else { alert("Недостаточно монет!"); }
+            alert("Уровень повышен!");
+            closeModals();
+        } else {
+            alert("Недостаточно монет!");
+        }
     };
 
     window.openRankModal = () => {
-        document.getElementById('rank-cost').innerText = globalSettings.rankPrice;
+        document.getElementById('rank-cost').innerText = RANK_UPGRADE_COST;
         document.getElementById('rankModal').style.display = 'flex';
     };
 
     window.upgradeRank = async () => {
         if (userData.level < 10) {
-            alert("Нужен уровень 10!");
+            alert("Вам нужен как минимум Уровень 10 для повышения ранга!");
             return;
         }
-        if (userData.coins >= globalSettings.rankPrice) {
+        if (userData.coins >= RANK_UPGRADE_COST) {
             await update(ref(db, `users/${currentUid}`), {
-                coins: userData.coins - globalSettings.rankPrice,
-                level: 1,
-                rank: (userData.rank || 1) + 1
+                coins: userData.coins - RANK_UPGRADE_COST,
+                level: 1, // Ռանգը փոխելուց լևելը զրոյանում է (դառնում է 1)
+                rank: userData.rank + 1
             });
-            window.closeModals();
-        } else { alert("Недостаточно монет!"); }
+            alert("Поздравляем! Ранг повышен!");
+            closeModals();
+        } else {
+            alert("Недостаточно монет!");
+        }
     };
 
-    window.logout = () => { window.location.href = "index.html"; };
-
-    window.onclick = (e) => {
-        if (e.target.classList.contains('modal-overlay')) window.closeModals();
-        if (!e.target.closest('.profile')) document.getElementById('profile-dropdown').style.display = 'none';
+    // 5. Օգնող ֆունկցիաներ (Dropdown, Close Modals, Logout)
+    window.toggleDropdown = () => {
+        const menu = document.getElementById('profile-dropdown');
+        menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
     };
+
+    window.closeModals = () => {
+        document.querySelectorAll('.modal-overlay').forEach(el => el.style.display = 'none');
+    };
+
+    window.logout = () => {
+        // Քանի որ մուտքը index.html-ից է, պարզապես հետ ենք գնում այնտեղ
+        window.location.href = "index.html"; 
+    };
+
+    // Փակել dropdown-ը դրսում սեղմելիս
+    window.onclick = function(event) {
+        if (!event.target.closest('.profile')) {
+            document.getElementById('profile-dropdown').style.display = 'none';
+        }
+        if (event.target.classList.contains('modal-overlay')) {
+            closeModals();
+        }
+    }
 </script>
 
 </body>
