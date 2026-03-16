@@ -136,20 +136,6 @@
     import { getDatabase, ref, onValue, set, get, update } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
     import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
-const auth = getAuth(app);
-const currentUid = "PCLsbIRHVoMKwFA1bWmNbbk3x4p1"; // Քո UID-ն
-
-// ՊԱՀԱԿԸ
-onAuthStateChanged(auth, (user) => {
-    if (!user) {
-        // Եթե լոգին չի եղել, վռնդում ենք
-        window.location.href = "index.html";
-    } else if (user.uid !== currentUid) {
-        // Եթե ուրիշն է փորձում մտնել քո հղումով
-        alert("Մուտքն արգելված է։ Սա ձեր էջը չէ։");
-        window.location.href = "index.html";
-    }
-});
     const firebaseConfig = {
         apiKey: "AIzaSyDMX2P4uPPL1N2dsh0qEW57rjZc1Z-pyXs",
         authDomain: "mrgh-game.firebaseapp.com",
@@ -160,18 +146,39 @@ onAuthStateChanged(auth, (user) => {
 
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
-    
-    const currentUid = "PCLsbIRHVoMKwFA1bWmNbbk3x4p1";
+    const auth = getAuth(app);
+    const currentUid = "SOHqHyiFeEVu2lp2uwBAq6ZQ06N2";
+
+    // --- ԳԼՈԲԱԼ ԿԱՐԳԱՎՈՐՈՒՄՆԵՐ ---
+    // Եթե բազայում settings չկա, կօգտագործի այս թվերը
+    let globalSettings = { levelPrice: 50, rankPrice: 1000 }; 
+
+    // Լսում ենք բազայի գները իրական ժամանակում
+    onValue(ref(db, 'settings'), (snapshot) => {
+        if (snapshot.exists()) {
+            globalSettings = snapshot.val();
+        }
+    });
+
+    // ՊԱՀԱԿԸ (Auth Check) - Այստեղ արդեն app-ը հայտարարված է
+    onAuthStateChanged(auth, (user) => {
+        if (!user) {
+            window.location.href = "index.html";
+        } else if (user.uid !== currentUid) {
+            alert("Մուտքն արգելված է։ Սա ձեր էջը չէ։");
+            window.location.href = "index.html";
+        }
+    });
+
     let userData = {}; 
     let currentGameUrl = "";
 
-    // --- ԿԱՐԳԱՎՈՐՈՒՄՆԵՐ (Upgrade Գներ) ---
+    // Ֆունկցիա՝ լևելի գինը հաշվելու համար
     function getLevelCost(currentLevel) {
-        return currentLevel * 50; // Օրինակ՝ լևել 1-ից 2 արժե 50, 2-ից 3՝ 100։
+        return currentLevel * globalSettings.levelPrice;
     }
-    const RANK_UPGRADE_COST = 1000; // Ռանգի գինը
 
-    // 1. Բեռնում ենք Օգտատիրոջ Տվյալները (Header)
+    // 1. Բեռնում ենք Օգտատիրոջ Տվյալները
     onValue(ref(db, `users/${currentUid}`), (snapshot) => {
         userData = snapshot.val();
         if(userData) {
@@ -183,122 +190,65 @@ onAuthStateChanged(auth, (user) => {
         }
     });
 
-    // 2. Բեռնում ենք Խաղերը
+    // 2. Բեռնում ենք Խաղերը (Կոդը նույնն է...)
     onValue(ref(db, `users/${currentUid}/games`), (snapshot) => {
         const container = document.getElementById('games-container');
         container.innerHTML = "";
-        
         if (!snapshot.exists()) {
             container.innerHTML = "<h3>Пока нет доступных игр.</h3>";
             return;
         }
-
         snapshot.forEach((child) => {
             const game = child.val();
             const gameId = child.key;
-            
-            // Ստուգում ենք առաջադրանքների ստատուսը
             let allPassed = true;
-            let hasTasks = false;
             let tasksObj = game.tasks || {};
-
+            let hasTasks = Object.keys(tasksObj).length > 0;
             Object.values(tasksObj).forEach(task => {
-                hasTasks = true;
                 if(task.status !== 'passed') allPassed = false;
             });
-
-            // Եթե տասք չկա կամ բոլորը passed են՝ Завершено (Կանաչ), հակառակ դեպքում՝ Еще осталось (Կարմիր)
             const statusClass = (hasTasks && allPassed) ? 'done' : 'pending';
             const statusText = (hasTasks && allPassed) ? 'Завершено' : 'Еще осталось';
-
             container.innerHTML += `
                 <div class="game-card">
                     <div class="game-info-wrapper">
-                        <img src="${game.image}" class="game-image" alt="Game">
+                        <img src="${game.image}" class="game-image">
                         <div class="game-details">
                             <h2>${game.name}</h2>
                             <div class="status ${statusClass}">${statusText}</div>
                             <button class="btn" onclick="openGameTasks('${gameId}')">Подключиться</button>
                         </div>
                     </div>
-                </div>
-            `;
+                </div>`;
         });
     });
 
-    // 3. Տասքերի Մոդալի բացում (Подключиться)
-    window.openGameTasks = async (gameId) => {
-        const gameSnapshot = await get(ref(db, `users/${currentUid}/games/${gameId}`));
-        const game = gameSnapshot.val();
-        
-        currentGameUrl = game.url; // Պահում ենք լինքը Играть կոճակի համար
-        document.getElementById('modal-game-name').innerText = game.name;
-        
-        const taskListDiv = document.getElementById('modal-task-list');
-        taskListDiv.innerHTML = "";
-        
-        if(game.tasks) {
-            Object.values(game.tasks).forEach(task => {
-                const isPassed = task.status === 'passed';
-                const statusClass = isPassed ? 'passed' : 'pending';
-                
-                taskListDiv.innerHTML += `
-                    <div class="task-item ${statusClass}">
-                        <div class="task-desc">→ ${task.desc} -</div>
-                        <div class="task-reward">
-                            <span>${task.cost}</span>
-                            <div class="coin-icon" style="width:25px;height:25px;font-size:14px;">C</div>
-                        </div>
-                    </div>
-                `;
-            });
-        } else {
-            taskListDiv.innerHTML = "<p>Нет заданий.</p>";
-        }
+    // --- ՊԱՏՈՒՀԱՆՆԵՐԻ ՖՈՒՆԿՑԻԱՆԵՐ ---
 
-        document.getElementById('tasksModal').style.display = 'flex';
-    };
-
-    window.playGame = () => {
-        if(currentGameUrl) window.open(currentGameUrl, '_blank');
-    };
-
-    // 4. Upgrade Լոգիկա (Լևել և Ռանգ)
     window.openLevelModal = () => {
         const cost = getLevelCost(userData.level);
         document.getElementById('level-cost').innerText = cost;
         document.getElementById('levelModal').style.display = 'flex';
     };
 
-    window.upgradeLevel = async () => {
-        const cost = getLevelCost(userData.level);
-        if (userData.coins >= cost) {
-            await update(ref(db, `users/${currentUid}`), {
-                coins: userData.coins - cost,
-                level: userData.level + 1
-            });
-            alert("Уровень повышен!");
-            closeModals();
-        } else {
-            alert("Недостаточно монет!");
-        }
-    };
-
     window.openRankModal = () => {
-        document.getElementById('rank-cost').innerText = RANK_UPGRADE_COST;
+        // ՀԻՄՆԱԿԱՆ ՓՈՓՈԽՈՒԹՅՈՒՆԸ ԱՅՍՏԵՂ Է
+        document.getElementById('rank-cost').innerText = globalSettings.rankPrice;
         document.getElementById('rankModal').style.display = 'flex';
     };
 
     window.upgradeRank = async () => {
         if (userData.level < 10) {
-            alert("Вам нужен как минимум Уровень 10 для повышения ранга!");
+            alert("Вам нужен как минимум Уровень 10!");
             return;
         }
-        if (userData.coins >= RANK_UPGRADE_COST) {
+        // Օգտագործում ենք globalSettings-ի գինը
+        const currentRankCost = globalSettings.rankPrice;
+        if (userData.coins >= currentRankCost) {
             await update(ref(db, `users/${currentUid}`), {
-                coins: userData.coins - RANK_UPGRADE_COST,
-                level: 1, // Ռանգը փոխելուց լևելը զրոյանում է (դառնում է 1)
-                rank: userData.rank + 1
+                coins: userData.coins - currentRankCost,
+                level: 1,
+                rank: (userData.rank || 1) + 1
             });
             alert("Поздравляем! Ранг повышен!");
             closeModals();
@@ -307,29 +257,36 @@ onAuthStateChanged(auth, (user) => {
         }
     };
 
-    // 5. Օգնող ֆունկցիաներ (Dropdown, Close Modals, Logout)
+    // ... Մնացած ֆունկցիաները (closeModals, openGameTasks և այլն) նույնն են ...
+    window.closeModals = () => {
+        document.querySelectorAll('.modal-overlay').forEach(el => el.style.display = 'none');
+    };
+    window.openGameTasks = async (gameId) => {
+        const gameSnapshot = await get(ref(db, `users/${currentUid}/games/${gameId}`));
+        const game = gameSnapshot.val();
+        currentGameUrl = game.url;
+        document.getElementById('modal-game-name').innerText = game.name;
+        const taskListDiv = document.getElementById('modal-task-list');
+        taskListDiv.innerHTML = "";
+        if(game.tasks) {
+            Object.values(game.tasks).forEach(task => {
+                taskListDiv.innerHTML += `<div class="task-item ${task.status === 'passed' ? 'passed' : 'pending'}">
+                    <div class="task-desc">→ ${task.desc}</div>
+                    <div class="task-reward"><span>${task.cost}</span><div class="coin-icon" style="width:25px;height:25px;font-size:14px;">C</div></div>
+                </div>`;
+            });
+        }
+        document.getElementById('tasksModal').style.display = 'flex';
+    };
+    window.playGame = () => { if(currentGameUrl) window.open(currentGameUrl, '_blank'); };
     window.toggleDropdown = () => {
         const menu = document.getElementById('profile-dropdown');
         menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
     };
-
-    window.closeModals = () => {
-        document.querySelectorAll('.modal-overlay').forEach(el => el.style.display = 'none');
-    };
-
-    window.logout = () => {
-        // Քանի որ մուտքը index.html-ից է, պարզապես հետ ենք գնում այնտեղ
-        window.location.href = "index.html"; 
-    };
-
-    // Փակել dropdown-ը դրսում սեղմելիս
+    window.logout = () => { window.location.href = "index.html"; };
     window.onclick = function(event) {
-        if (!event.target.closest('.profile')) {
-            document.getElementById('profile-dropdown').style.display = 'none';
-        }
-        if (event.target.classList.contains('modal-overlay')) {
-            closeModals();
-        }
+        if (!event.target.closest('.profile')) document.getElementById('profile-dropdown').style.display = 'none';
+        if (event.target.classList.contains('modal-overlay')) closeModals();
     }
 </script>
 
