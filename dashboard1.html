@@ -150,23 +150,30 @@
     const db = getDatabase(app);
     const auth = getAuth(app);
 
-    // 3. Քո UID-ն (Փոփոխականները հայտարարում ենք մեկ անգամ)
+    // 3. Փոփոխականներ
     const MY_PAGE_UID = "SOHqHyiFeEVu2lp2uwBAq6ZQ06N2";
     let userData = {}; 
     let currentGameUrl = "";
-    const RANK_UPGRADE_COST = 1000; // Քո ուզած 1000-ը
+    
+    // Գլոբալ կարգավորումներ բազայից (սկզբնական արժեքներով)
+    let globalSettings = { levelPrice: 50, rankPrice: 1000 };
+
+    // --- ԿԱՊ ԲԱԶԱՅԻ SETTINGS-Ի ՀԵՏ ---
+    onValue(ref(db, 'settings'), (snapshot) => {
+        if (snapshot.exists()) {
+            globalSettings = snapshot.val();
+            console.log("Գները թարմացվեցին բազայից:", globalSettings);
+        }
+    });
 
     // --- ԱՆՎՏԱՆԳՈՒԹՅԱՆ ՊԱՀԱԿ ---
     onAuthStateChanged(auth, (user) => {
         if (!user) {
-            // Եթե լոգին չի եղել
             window.location.href = "index.html";
         } else if (user.uid !== MY_PAGE_UID) {
-            // Եթե ուրիշ օգտատեր է փորձում մտնել այս ֆայլը
             alert("Մուտքն արգելված է։ Սա ձեր էջը չէ։");
             window.location.href = "index.html";
         } else {
-            // Եթե ամեն ինչ OK է, նոր սկսում ենք բեռնել տվյալները
             loadUserData();
             loadUserGames();
         }
@@ -175,7 +182,8 @@
     // --- ՖՈՒՆԿՑԻԱՆԵՐ ---
 
     function getLevelCost(currentLevel) {
-        return currentLevel * 50;
+        // Վերցնում է բազայի levelPrice-ը կամ 50
+        return currentLevel * (globalSettings.levelPrice || 50);
     }
 
     function loadUserData() {
@@ -230,7 +238,7 @@
         });
     }
 
-    // --- WINDOW FUNCTIONS (Կոճակների համար) ---
+    // --- WINDOW FUNCTIONS ---
 
     window.openGameTasks = async (gameId) => {
         const gameSnapshot = await get(ref(db, `users/${MY_PAGE_UID}/games/${gameId}`));
@@ -275,7 +283,8 @@
     };
 
     window.openRankModal = () => {
-        document.getElementById('rank-cost').innerText = RANK_UPGRADE_COST;
+        // Վերցնում է բազայի rankPrice-ը կամ 1000
+        document.getElementById('rank-cost').innerText = globalSettings.rankPrice || 1000;
         document.getElementById('rankModal').style.display = 'flex';
     };
 
@@ -284,9 +293,10 @@
             alert("Нужен уровень 10!");
             return;
         }
-        if (userData.coins >= RANK_UPGRADE_COST) {
+        const currentRankCost = globalSettings.rankPrice || 1000;
+        if (userData.coins >= currentRankCost) {
             await update(ref(db, `users/${MY_PAGE_UID}`), {
-                coins: userData.coins - RANK_UPGRADE_COST,
+                coins: userData.coins - currentRankCost,
                 level: 1,
                 rank: (userData.rank || 1) + 1
             });
