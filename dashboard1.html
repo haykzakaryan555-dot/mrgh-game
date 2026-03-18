@@ -68,7 +68,7 @@
         /* Պրոմոկոդի ինփութ */
         .promo-input-style {
             width: 80%; padding: 10px; margin-bottom: 20px; border: 1px solid #ccc; border-radius: 3px;
-            font-family: 'Trebuchet MS'; text-transform: uppercase; text-align: center; font-size: 18px;
+            font-family: 'Trebuchet MS';text-align: center; font-size: 18px;
         }
 
         .task-list { margin-top: 20px; }
@@ -188,7 +188,7 @@
     };
 
     window.activatePromo = async () => {
-        const promoCode = document.getElementById('promo-input').value.trim().toUpperCase();
+        const promoCode = document.getElementById('promo-input');
         if (!promoCode) { alert("Введите код!"); return; }
 
         const promoRef = ref(db, `promocodes/${promoCode}`);
