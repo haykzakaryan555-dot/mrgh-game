@@ -34,17 +34,6 @@
             font-weight: bold; font-size: 20px; color: #000;
         }
 
-        /* --- ՊՐՈՄՈԿՈԴԻ ԲԱԺԻՆ --- */
-        .promo-container {
-            background: #fdf5c9; border: 1px solid #d4c57c; padding: 15px; 
-            margin-bottom: 30px; border-radius: 5px; display: flex; gap: 10px;
-            box-shadow: 2px 2px 0px rgba(0,0,0,0.1); align-items: center;
-        }
-        .promo-container input {
-            flex: 1; padding: 10px; border: 1px solid #ccc; border-radius: 3px;
-            font-family: 'Trebuchet MS'; text-transform: uppercase;
-        }
-
         /* Օգտատիրոջ պրոֆիլ */
         .profile { display: flex; align-items: center; gap: 15px; cursor: pointer; position: relative; }
         .profile img { width: 50px; height: 50px; border-radius: 5px; object-fit: cover; }
@@ -76,6 +65,12 @@
         .modal-content { background: white; padding: 30px; max-width: 600px; width: 100%; border-radius: 5px; position: relative; }
         .close-btn { position: absolute; top: 10px; right: 15px; font-size: 24px; cursor: pointer; color: #888; }
         
+        /* Պրոմոկոդի ինփութ */
+        .promo-input-style {
+            width: 80%; padding: 10px; margin-bottom: 20px; border: 1px solid #ccc; border-radius: 3px;
+            font-family: 'Trebuchet MS'; text-transform: uppercase; text-align: center; font-size: 18px;
+        }
+
         .task-list { margin-top: 20px; }
         .task-item { display: flex; align-items: center; justify-content: space-between; border-bottom: 1px dotted #ccc; padding: 15px 0; font-size: 18px;}
         .task-item.passed { color: #00d200; }
@@ -104,17 +99,24 @@
                 <span>˅</span>
             </div>
             <div class="dropdown" id="profile-dropdown">
+                <div onclick="openPromoModal()">Промокоды</div>
                 <div onclick="logout()">Выйти</div>
             </div>
         </div>
     </div>
 
-    <div class="promo-container">
-        <input type="text" id="promo-input" placeholder="Введите промокод...">
-        <button class="btn" onclick="activatePromo()">Активировать</button>
-    </div>
-
     <div class="game-list" id="games-container"></div>
+</div>
+
+<div class="modal-overlay" id="promoModal">
+    <div class="modal-content" style="text-align: center;">
+        <span class="close-btn" onclick="closeModals()">&times;</span>
+        <h2>Активация промокода</h2>
+        <input type="text" id="promo-input" placeholder="Введите промокод..." class="promo-input-style">
+        <br>
+        <button class="btn" onclick="activatePromo()" style="background: #27ae60;">Активировать</button>
+        <button class="btn" onclick="closeModals()" style="background: #95a5a6; margin-left: 10px;">Закрыть</button>
+    </div>
 </div>
 
 <div class="modal-overlay" id="tasksModal">
@@ -180,7 +182,12 @@
         }
     });
 
-    // --- ՊՐՈՄՈԿՈԴԻ ԱԿՏԻՎԱՑՄԱՆ ՖՈՒՆԿՑԻԱ ---
+    // --- ՊՐՈՄՈԿՈԴԻ ՖՈՒՆԿՑԻԱՆԵՐ ---
+    window.openPromoModal = () => {
+        document.getElementById('promoModal').style.display = 'flex';
+        document.getElementById('profile-dropdown').style.display = 'none';
+    };
+
     window.activatePromo = async () => {
         const promoCode = document.getElementById('promo-input').value.trim().toUpperCase();
         if (!promoCode) { alert("Введите код!"); return; }
@@ -191,20 +198,18 @@
         if (snapshot.exists()) {
             const promoData = snapshot.val();
             const reward = parseInt(promoData.reward);
-            
-            // Ավելացնում ենք քոինները
             await update(ref(db, `users/${MY_PAGE_UID}`), {
                 coins: (userData.coins || 0) + reward
             });
-
             alert(`Успешно! Вы получили ${reward} coins!`);
             document.getElementById('promo-input').value = "";
+            closeModals();
         } else {
             alert("Неверный промокод!");
         }
     };
 
-    // --- ՄՆԱՑԱԾ ՖՈՒՆԿՑԻԱՆԵՐ ---
+    // --- ՄՆԱՑԱԾԸ (Անփոփոխ) ---
 
     function getLevelCost(currentLevel) {
         return currentLevel * (globalSettings.levelPrice || 50);
@@ -323,7 +328,10 @@
     window.logout = () => { auth.signOut().then(() => window.location.href = "index.html"); };
 
     window.onclick = (event) => {
-        if (!event.target.closest('.profile')) document.getElementById('profile-dropdown').style.display = 'none';
+        if (!event.target.closest('.profile')) {
+            const drop = document.getElementById('profile-dropdown');
+            if(drop) drop.style.display = 'none';
+        }
         if (event.target.classList.contains('modal-overlay')) closeModals();
     };
 </script>
