@@ -8,17 +8,14 @@
         .container { max-width: 800px; margin: 0 auto; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
         h2 { text-align: center; color: #333; }
         
-        /* UID & Menu Items */
         .uid-item { padding: 15px; border-bottom: 1px solid #eee; cursor: pointer; text-align: center; transition: 0.2s; font-weight: bold; color: #555; }
         .uid-item:hover { background: #f9f9f9; color: #000; }
-        .promo-menu-item { color: #27ae60; border-bottom: 2px solid #eee; } /* Պրոմոկոդի տողի տարբերվող գույնը */
+        .promo-menu-item { color: #27ae60; border-bottom: 2px solid #eee; }
 
-        /* Game Cards */
         .game-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 20px; }
         .admin-game-card { border: 1px solid #ddd; padding: 15px; border-radius: 8px; text-align: center; }
         .admin-game-card img { width: 100px; height: 100px; object-fit: cover; border-radius: 8px; }
         
-        /* Buttons */
         .btn { padding: 10px 15px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; }
         .btn-add { background: #27ae60; color: white; font-size: 20px; margin: 20px auto; display: block; }
         .btn-enter { background: #3498db; color: white; margin-top: 10px; }
@@ -29,11 +26,9 @@
         .btn-back { background: #95a5a6; color: white; margin-bottom: 20px; }
 
         .hidden { display: none; }
-        .form-group { margin-bottom: 15px; }
         input { width: 100%; padding: 10px; margin-top: 5px; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box; }
         .task-input-row { display: flex; gap: 10px; margin-bottom: 5px; }
 
-        /* --- ՊՐՈՄՈԿՈԴԵՐԻ ՈՃԵՐ --- */
         .promo-form { background: #f9f9f9; padding: 15px; border-radius: 8px; margin-bottom: 15px; border: 1px solid #ddd; }
         .promo-list-item { 
             display: flex; justify-content: space-between; align-items: center; 
@@ -71,11 +66,9 @@
 
     <div id="view-add-game" class="hidden">
         <h2>Ավելացնել / Փոփոխել Խաղ</h2>
-        <div class="form-group">
-            <input type="text" id="gameName" placeholder="Game Name">
-            <input type="text" id="gameImage" placeholder="Game Image URL">
-            <input type="text" id="gameUrl" placeholder="Game URL">
-        </div>
+        <input type="text" id="gameName" placeholder="Game Name">
+        <input type="text" id="gameImage" placeholder="Game Image URL">
+        <input type="text" id="gameUrl" placeholder="Game URL">
         <h3>Tasks <button class="btn btn-add" style="display:inline; padding: 2px 10px;" onclick="addTaskInput()">+</button></h3>
         <div id="tasks-inputs"></div>
         <button class="btn btn-add" onclick="saveGame()">ՊԱՀՊԱՆԵԼ</button>
@@ -120,16 +113,17 @@
     onValue(ref(db, 'users'), (snapshot) => {
         const listDiv = document.getElementById('uid-list');
         listDiv.innerHTML = "";
-        snapshot.forEach((child) => {
-            const div = document.createElement('div');
-            div.className = 'uid-item';
-            div.innerText = child.key;
-            div.onclick = () => openUser(child.key);
-            listDiv.appendChild(div);
-        });
+        if(snapshot.exists()){
+            snapshot.forEach((child) => {
+                const div = document.createElement('div');
+                div.className = 'uid-item';
+                div.innerText = child.key;
+                div.onclick = () => openUser(child.key);
+                listDiv.appendChild(div);
+            });
+        }
     });
 
-    // --- ՊՐՈՄՈԿՈԴԵՐԻ View-ի ՖՈՒՆԿՑԻԱՆԵՐ ---
     window.showPromoView = () => {
         document.getElementById('view-menu').classList.add('hidden');
         document.getElementById('view-promo').classList.remove('hidden');
@@ -140,43 +134,48 @@
         document.getElementById('view-menu').classList.remove('hidden');
     };
 
-    // Լսում ենք պրոմոկոդերի փոփոխությունները
     onValue(ref(db, 'promocodes'), (snapshot) => {
         const promoList = document.getElementById('promo-list-container');
         promoList.innerHTML = "";
-        if (!snapshot.exists()) {
-            promoList.innerHTML = "<p style='text-align:center; color:#888;'>Ակտիվ պրոմոկոդեր չկան</p>";
-            return;
-        }
-        snapshot.forEach((child) => {
-            const code = child.key;
-            const data = child.val();
-            promoList.innerHTML += `
-                <div class="promo-list-item">
+        if (snapshot.exists()) {
+            snapshot.forEach((child) => {
+                const code = child.key;
+                const data = child.val();
+                const item = document.createElement('div');
+                item.className = 'promo-list-item';
+                item.innerHTML = `
                     <div class="promo-info"><b>${code}</b> — ${data.reward} Coins</div>
-                    <button class="btn btn-delete" style="margin:0; padding:5px 10px;" onclick="deletePromo('${code}')">Ջնջել</button>
-                </div>`;
-        });
+                    <button class="btn btn-delete" style="margin:0; padding:5px 10px;">Ջնջել</button>
+                `;
+                item.querySelector('.btn-delete').onclick = () => deletePromo(code);
+                promoList.appendChild(item);
+            });
+        } else {
+            promoList.innerHTML = "<p style='text-align:center; color:#888;'>Ակտիվ պրոմոկոդեր չկան</p>";
+        }
     });
 
     window.createPromo = async () => {
-        const code = document.getElementById('admin-promo-code').value.trim().toUpperCase();
+        const code = document.getElementById('admin-promo-code').value.trim();
         const reward = document.getElementById('admin-promo-reward').value;
-        if (!code || !reward) { alert("Լրացրեք բոլոր դաշտերը:"); return; }
+        if (!code || !reward) { alert("Լրացրեք բոլոր դաշտերը"); return; }
 
-        await set(ref(db, `promocodes/${code}`), { reward: parseInt(reward) });
-        document.getElementById('admin-promo-code').value = "";
-        document.getElementById('admin-promo-reward').value = "";
-        alert("Պրոմոկոդը ստեղծված է:");
+        try {
+            await set(ref(db, `promocodes/${code}`), { reward: parseInt(reward) });
+            document.getElementById('admin-promo-code').value = "";
+            document.getElementById('admin-promo-reward').value = "";
+            alert("Պրոմոկոդը հաջողությամբ ստեղծվեց");
+        } catch (e) {
+            alert("Սխալ ստեղծելիս");
+        }
     };
 
     window.deletePromo = (code) => {
-        if (confirm(`Հաստատ ջնջե՞լ ${code} պրոմոկոդը:`)) {
+        if (confirm(`Հաստատ ջնջե՞լ ${code} պրոմոկոդը`)) {
             remove(ref(db, `promocodes/${code}`));
         }
     };
 
-    // --- ՄՆԱՑԱԾԸ ---
     window.openUser = (uid) => {
         currentUid = uid;
         document.getElementById('view-menu').classList.add('hidden');
@@ -194,19 +193,27 @@
         onValue(ref(db, `users/${currentUid}/games`), (snapshot) => {
             const container = document.getElementById('games-container');
             container.innerHTML = "";
-            snapshot.forEach((child) => {
-                const game = child.val();
-                const gameId = child.key;
-                container.innerHTML += `
-                    <div class="admin-game-card">
+            if(snapshot.exists()){
+                snapshot.forEach((child) => {
+                    const game = child.val();
+                    const gameId = child.key;
+                    const div = document.createElement('div');
+                    div.className = 'admin-game-card';
+                    div.innerHTML = `
                         <img src="${game.image}" alt="">
                         <h4>${game.name}</h4>
-                        <button class="btn btn-enter" onclick="enterGame('${gameId}', '${game.name}')">Enter</button>
-                        <button class="btn btn-change" onclick="editGame('${gameId}')">Change</button>
-                        <button class="btn btn-copy" onclick="copyGame('${gameId}')">Copy</button>
-                        <button class="btn btn-delete" onclick="deleteGame('${gameId}')">Delete</button>
-                    </div>`;
-            });
+                        <button class="btn btn-enter">Enter</button>
+                        <button class="btn btn-change">Change</button>
+                        <button class="btn btn-copy">Copy</button>
+                        <button class="btn btn-delete">Delete</button>
+                    `;
+                    div.querySelector('.btn-enter').onclick = () => enterGame(gameId, game.name);
+                    div.querySelector('.btn-change').onclick = () => editGame(gameId);
+                    div.querySelector('.btn-copy').onclick = () => copyGame(gameId);
+                    div.querySelector('.btn-delete').onclick = () => deleteGame(gameId);
+                    container.appendChild(div);
+                });
+            }
         });
     }
 
@@ -285,12 +292,11 @@
                 });
             }
             await set(push(ref(db, `users/${currentUid}/games`)), { ...game, name: game.name + " (Copy)", tasks: cleanTasks });
-            alert("Պատճենվեց:");
         }
     };
 
     window.deleteGame = (gameId) => {
-        if(confirm("Հաստատ ջնջե՞լ խաղը:")) remove(ref(db, `users/${currentUid}/games/${gameId}`));
+        if(confirm("Հաստատ ջնջե՞լ խաղը")) remove(ref(db, `users/${currentUid}/games/${gameId}`));
     };
 
     window.enterGame = (gameId, gameName) => {
@@ -301,18 +307,22 @@
         onValue(ref(db, `users/${currentUid}/games/${gameId}/tasks`), (snapshot) => {
             const list = document.getElementById('task-list');
             list.innerHTML = "";
-            snapshot.forEach((child) => {
-                const task = child.val();
-                const isPassed = task.status === 'passed';
-                list.innerHTML += `
-                    <div style="padding:10px; border-bottom:1px solid #ddd; display:flex; justify-content:space-between; align-items:center;">
+            if(snapshot.exists()){
+                snapshot.forEach((child) => {
+                    const task = child.val();
+                    const isPassed = task.status === 'passed';
+                    const div = document.createElement('div');
+                    div.style = "padding:10px; border-bottom:1px solid #ddd; display:flex; justify-content:space-between; align-items:center;";
+                    div.innerHTML = `
                         <span>${task.desc} (<b>${task.cost}</b>)</span>
-                        <button class="btn btn-passed" style="background: ${isPassed ? '#27ae60' : '#e67e22'}; color: white;" 
-                                onclick="toggleTask('${child.key}', ${task.cost}, ${isPassed})">
+                        <button class="btn btn-passed" style="background: ${isPassed ? '#27ae60' : '#e67e22'}; color: white;">
                             ${isPassed ? 'PASSED' : 'PASS'}
                         </button>
-                    </div>`;
-            });
+                    `;
+                    div.querySelector('.btn-passed').onclick = () => toggleTask(child.key, task.cost, isPassed);
+                    list.appendChild(div);
+                });
+            }
         });
     };
 
@@ -321,7 +331,7 @@
         const snapshot = await get(userCoinsRef);
         const currentCoins = snapshot.val() || 0;
         if (isPassed) {
-            if(confirm("Հաստատ չեղարկե՞լ:")) {
+            if(confirm("Հաստատ չեղարկե՞լ")) {
                 await update(ref(db, `users/${currentUid}/games/${currentGameId}/tasks/${taskId}`), { status: 'pending' });
                 await set(userCoinsRef, currentCoins - cost);
             }
