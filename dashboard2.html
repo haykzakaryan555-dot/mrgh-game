@@ -68,7 +68,7 @@
         /* Պրոմոկոդի ինփութ */
         .promo-input-style {
             width: 80%; padding: 10px; margin-bottom: 20px; border: 1px solid #ccc; border-radius: 3px;
-            font-family: 'Trebuchet MS'; text-align: center; font-size: 18px;
+            font-family: 'Trebuchet MS';text-align: center; font-size: 18px;
         }
 
         .task-list { margin-top: 20px; }
@@ -163,6 +163,7 @@
     const db = getDatabase(app);
     const auth = getAuth(app);
 
+    // Փոփոխված UID-ն այստեղ է
     const MY_PAGE_UID = "PCLsbIRHVoMKwFA1bWmNbbk3x4p1";
     let userData = {}; 
     let currentGameUrl = "";
@@ -188,7 +189,9 @@
     };
 
     window.activatePromo = async () => {
-        const promoCode = document.getElementById('promo-input');
+        const promoInput = document.getElementById('promo-input');
+        const promoCode = promoInput.value.trim();
+        
         if (!promoCode) { alert("Введите код!"); return; }
 
         const promoRef = ref(db, `promocodes/${promoCode}`);
@@ -201,7 +204,7 @@
                 coins: (userData.coins || 0) + reward
             });
             alert(`Успешно! Вы получили ${reward} coins!`);
-            document.getElementById('promo-input').value = "";
+            promoInput.value = "";
             closeModals();
         } else {
             alert("Неверный промокод!");
