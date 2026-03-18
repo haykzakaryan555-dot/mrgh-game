@@ -21,6 +21,8 @@
         .btn { padding: 10px 15px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; }
         .btn-add { background: #27ae60; color: white; font-size: 20px; margin: 20px auto; display: block; }
         .btn-enter { background: #3498db; color: white; margin-top: 10px; }
+        /* ԱՎԵԼԱՑՎԱԾ Է CHANGE ԿՈՃԱԿԻ ԳՈՒՅՆԸ */
+        .btn-change { background: #e67e22; color: white; margin-top: 10px; margin-left: 5px; } 
         .btn-delete { background: #e74c3c; color: white; margin-top: 10px; margin-left: 5px; }
         .btn-passed { background: #f1c40f; color: #000; padding: 5px 10px; font-size: 12px; }
         .btn-back { background: #95a5a6; color: white; margin-bottom: 20px; }
@@ -49,7 +51,7 @@
     </div>
 
     <div id="view-add-game" class="hidden">
-        <h2>Ավելացնել Նոր Խաղ</h2>
+        <h2>Ավելացնել / Փոփոխել Խաղ</h2>
         <div class="form-group">
             <input type="text" id="gameName" placeholder="Game Name">
             <input type="text" id="gameImage" placeholder="Game Image URL">
@@ -77,7 +79,6 @@
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
     import { getDatabase, ref, onValue, set, push, remove, update, get } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
-    // Ավելացնում ենք Auth գրադարանը
     import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
     const firebaseConfig = {
@@ -90,14 +91,12 @@
 
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
-    const auth = getAuth(app); // Initialize Auth
+    const auth = getAuth(app); 
 
-    // --- ԱՆՎՏԱՆԳՈՒԹՅԱՆ ՊԱՀԱԿ ---
-    const ADMIN_UID = "EQwgbSiI8He58MjrCune8jpc0eG2"; // Քո ադմին UID-ն
+    const ADMIN_UID = "EQwgbSiI8He58MjrCune8jpc0eG2"; 
 
     onAuthStateChanged(auth, (user) => {
         if (!user || user.uid !== ADMIN_UID) {
-            // Եթե լոգին չի եղել կամ ադմինը չի, հետ ենք շպրտում
             alert("Մուտքն արգելված է միայն ադմինին:");
             window.location.href = "index.html";
         }
@@ -105,8 +104,8 @@
 
     let currentUid = "";
     let currentGameId = "";
+    let editingGameId = null; // ԱՎԵԼԱՑՎԱԾ Է. Հիշում է՝ որ խաղն ենք փոփոխում
 
-    // --- ՄՆԱՑԱԾ ՔՈ ԿՈԴԸ ԱՌԱՆՑ ՓՈՓՈԽՈՒԹՅԱՆ ---
     onValue(ref(db, 'users'), (snapshot) => {
         const listDiv = document.getElementById('uid-list');
         listDiv.innerHTML = "";
@@ -140,11 +139,13 @@
             snapshot.forEach((child) => {
                 const game = child.val();
                 const gameId = child.key;
+                // ԱՎԵԼԱՑՎԱԾ Է CHANGE ԿՈՃԱԿԸ ՆԵՐՔԵՎԻ ՏՈՂՈՒՄ
                 container.innerHTML += `
                     <div class="admin-game-card">
                         <img src="${game.image}" alt="">
                         <h4>${game.name}</h4>
                         <button class="btn btn-enter" onclick="enterGame('${gameId}', '${game.name}')">Enter</button>
+                        <button class="btn btn-change" onclick="editGame('${gameId}')">Change</button>
                         <button class="btn btn-delete" onclick="deleteGame('${gameId}')">Delete</button>
                     </div>
                 `;
@@ -152,7 +153,52 @@
         });
     }
 
-    window.showAddGame = () => document.getElementById('view-add-game').classList.remove('hidden');
+    // ԱՎԵԼԱՑՎԱԾ Է ՓՈՓՈԽԵԼՈՒ ՖՈՒՆԿՑԻԱՆ
+    window.editGame = async (gameId) => {
+        editingGameId = gameId; 
+        document.getElementById('view-user').classList.add('hidden');
+        document.getElementById('view-add-game').classList.remove('hidden');
+
+        // Ստանում ենք հին տվյալները և լցնում դաշտերի մեջ
+        const snapshot = await get(ref(db, `users/${currentUid}/games/${gameId}`));
+        const game = snapshot.val();
+
+        document.getElementById('gameName').value = game.name || "";
+        document.getElementById('gameImage').value = game.image || "";
+        document.getElementById('gameUrl').value = game.url || "";
+
+        const tasksContainer = document.getElementById('tasks-inputs');
+        tasksContainer.innerHTML = ""; 
+
+        if (game.tasks) {
+            Object.entries(game.tasks).forEach(([taskId, task]) => {
+                const row = document.createElement('div');
+                row.className = 'task-input-row';
+                row.dataset.taskId = taskId; // Պահում ենք ID-ն
+                row.dataset.status = task.status || 'pending'; // Պահում ենք կարգավիճակը
+                row.innerHTML = `<input type="text" placeholder="Task description" class="task-name" value="${task.desc}">
+                                 <input type="number" placeholder="Cost" class="task-cost" style="width: 80px;" value="${task.cost}">`;
+                tasksContainer.appendChild(row);
+            });
+        } else {
+            addTaskInput();
+        }
+    };
+
+    // ԱՎԵԼԱՑՎԱԾ Է ՄԱՔՐԵԼՈՒ ԼՈԳԻԿԱՆ, ՈՐ ՆՈՐ ԽԱՂ ԱՎԵԼԱՑՆԵԼՈՒՑ ՀԻՆԸ ՉԵՐԵՎԱ
+    window.showAddGame = () => {
+        editingGameId = null;
+        document.getElementById('gameName').value = "";
+        document.getElementById('gameImage').value = "";
+        document.getElementById('gameUrl').value = "";
+        document.getElementById('tasks-inputs').innerHTML = `
+            <div class="task-input-row">
+                <input type="text" placeholder="Task description" class="task-name">
+                <input type="number" placeholder="Cost" class="task-cost" style="width: 80px;">
+            </div>`;
+        document.getElementById('view-add-game').classList.remove('hidden');
+    };
+
     window.hideAddGame = () => document.getElementById('view-add-game').classList.add('hidden');
 
     window.addTaskInput = () => {
@@ -163,6 +209,7 @@
         document.getElementById('tasks-inputs').appendChild(row);
     };
 
+    // ԱՎԵԼԱՑՎԱԾ Է EDIT-Ի ՍՏՈՒԳՈՒՄԸ ՍԱՎԵ ԱՆԵԼՈՒՑ
     window.saveGame = () => {
         const name = document.getElementById('gameName').value;
         const image = document.getElementById('gameImage').value;
@@ -173,16 +220,31 @@
         let tasks = {};
         taskNames.forEach((input, index) => {
             if(input.value) {
-                const taskId = push(ref(db)).key;
-                tasks[taskId] = { desc: input.value, cost: parseInt(taskCosts[index].value) || 0, status: 'pending' };
+                const row = input.parentElement;
+                // Եթե խմբագրում ենք, վերցնում ենք հին ID-ն և կարգավիճակը, եթե ոչ՝ սարքում ենք նորը
+                const existingId = row.dataset && row.dataset.taskId;
+                const taskId = existingId ? existingId : push(ref(db)).key;
+                const status = (row.dataset && row.dataset.status) ? row.dataset.status : 'pending';
+                
+                tasks[taskId] = { desc: input.value, cost: parseInt(taskCosts[index].value) || 0, status: status };
             }
         });
 
-        const newGameRef = push(ref(db, `users/${currentUid}/games`));
-        set(newGameRef, { name, image, url, tasks }).then(() => {
-            alert("Խաղը ավելացվեց:");
-            hideAddGame();
-        });
+        if (editingGameId) {
+            // Եթե փոփոխում ենք արդեն գոյություն ունեցող խաղ
+            update(ref(db, `users/${currentUid}/games/${editingGameId}`), { name, image, url, tasks }).then(() => {
+                alert("Խաղը հաջողությամբ փոփոխվեց:");
+                hideAddGame();
+                editingGameId = null; 
+            });
+        } else {
+            // Եթե ավելացնում ենք նորը (քո հին լոգիկան)
+            const newGameRef = push(ref(db, `users/${currentUid}/games`));
+            set(newGameRef, { name, image, url, tasks }).then(() => {
+                alert("Խաղը ավելացվեց:");
+                hideAddGame();
+            });
+        }
     };
 
     window.deleteGame = (gameId) => {
