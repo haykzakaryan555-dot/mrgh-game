@@ -292,11 +292,11 @@
                 
                 list.innerHTML += `
                     <div style="padding:10px; border-bottom:1px solid #ddd; display:flex; justify-content:space-between; align-items:center;">
-                        <span>${task.desc} (<b>${task.cost}</b> coins)</span>
-                        <button class="btn btn-passed" style="background: ${isPassed ? '#e74c3c' : '#27ae60'}; color: white;" 
-                                onclick="toggleTask('${taskId}', ${task.cost}, ${isPassed})">
-                            ${isPassed ? 'ՉԵՂԱՐԿԵԼ' : 'PASS'}
-                        </button>
+                    <span>${task.desc} (<b>${task.cost}</b> coins)</span>
+                     <button class="btn btn-passed" style="background: #27ae60; color: white;" 
+                     onclick="toggleTask('${taskId}', ${task.cost}, ${isPassed})">
+                    ${isPassed ? 'PASSED' : 'PASS'}
+                    </button>
                     </div>
                 `;
             });
