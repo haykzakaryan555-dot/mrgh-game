@@ -22,8 +22,10 @@
         .btn-add { background: #27ae60; color: white; font-size: 20px; margin: 20px auto; display: block; }
         .btn-enter { background: #3498db; color: white; margin-top: 10px; }
         .btn-change { background: #e67e22; color: white; margin-top: 10px; margin-left: 5px; } 
+        /* ՆՈՐ COPY ԿՈՃԱԿԻ ԳՈՒՅՆԸ */
+        .btn-copy { background: #9b59b6; color: white; margin-top: 10px; margin-left: 5px; }
         .btn-delete { background: #e74c3c; color: white; margin-top: 10px; margin-left: 5px; }
-        .btn-passed { background: #f1c40f; color: #000; padding: 5px 10px; font-size: 12px; transition: 0.2s; }
+        .btn-passed { padding: 5px 10px; font-size: 12px; transition: 0.2s; }
         .btn-back { background: #95a5a6; color: white; margin-bottom: 20px; }
 
         /* Modal / Forms */
@@ -75,6 +77,7 @@
         <div id="task-list"></div>
     </div>
 </div>
+
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
     import { getDatabase, ref, onValue, set, push, remove, update, get } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
@@ -144,12 +147,42 @@
                         <h4>${game.name}</h4>
                         <button class="btn btn-enter" onclick="enterGame('${gameId}', '${game.name}')">Enter</button>
                         <button class="btn btn-change" onclick="editGame('${gameId}')">Change</button>
+                        <button class="btn btn-copy" onclick="copyGame('${gameId}')">Copy</button>
                         <button class="btn btn-delete" onclick="deleteGame('${gameId}')">Delete</button>
                     </div>
                 `;
             });
         });
     }
+
+    // ՆՈՐ ՖՈՒՆԿՑԻԱ ԽԱՂԸ ՊԱՏՃԵՆԵԼՈՒ ՀԱՄԱՐ
+    window.copyGame = async (gameId) => {
+        const snapshot = await get(ref(db, `users/${currentUid}/games/${gameId}`));
+        const game = snapshot.val();
+        
+        if(game) {
+            let cleanTasks = {};
+            if(game.tasks) {
+                Object.values(game.tasks).forEach(task => {
+                    const newTaskId = push(ref(db)).key;
+                    cleanTasks[newTaskId] = { 
+                        desc: task.desc, 
+                        cost: task.cost, 
+                        status: 'pending' // Պատճենելիս միշտ սարքում ենք չարված
+                    };
+                });
+            }
+
+            const newGameRef = push(ref(db, `users/${currentUid}/games`));
+            await set(newGameRef, { 
+                name: game.name + " (Copy)", 
+                image: game.image, 
+                url: game.url, 
+                tasks: cleanTasks 
+            });
+            alert("Խաղը պատճենվեց:");
+        }
+    };
 
     window.editGame = async (gameId) => {
         editingGameId = gameId; 
@@ -236,13 +269,13 @@
         }
     };
 
+    // ՋՆՋԵԼՈՒ ԱՆՎՏԱՆԳՈՒԹՅՈՒՆ
     window.deleteGame = (gameId) => {
-        if(confirm("Ջնջե՞լ խաղը:")) {
+        if(confirm("Հաստատ ջնջե՞լ խաղը: \nԱյս գործողությունը անդառնալի է:")) {
             remove(ref(db, `users/${currentUid}/games/${gameId}`));
         }
     };
 
-    // ԱՅՍՏԵՂ ՓՈԽՎԵԼ Է ԿՈՃԱԿԻ ՏԵՍՔՆ ՈՒ ՖՈՒՆԿՑԻԱՅԻ ԿԱՆՉԸ
     window.enterGame = (gameId, gameName) => {
         currentGameId = gameId;
         document.getElementById('view-user').classList.add('hidden');
@@ -270,7 +303,7 @@
         });
     };
 
-    // ՆՈՐ ՖՈՒՆԿՑԻԱ ՀԻՆԻ ՓՈԽԱՐԵՆ, ՈՐԸ ԵՎ ՏԱԼԻՍ Է ԵՎ ՀԵՏ Է ՎԵՐՑՆՈՒՄ ԳՈՒՄԱՐԸ
+    // ՉԵՂԱՐԿԵԼՈՒ ԱՆՎՏԱՆԳՈՒԹՅՈՒՆ
     window.toggleTask = async (taskId, cost, isPassed) => {
         const taskRef = ref(db, `users/${currentUid}/games/${currentGameId}/tasks/${taskId}`);
         const userCoinsRef = ref(db, `users/${currentUid}/coins`);
@@ -279,11 +312,12 @@
         const currentCoins = snapshot.val() || 0;
 
         if (isPassed) {
-            // Եթե արդեն PASSED է, հետ ենք տալիս pending ու հանում գումարը
-            await update(taskRef, { status: 'pending' });
-            await set(userCoinsRef, currentCoins - cost);
+            // ՀԱՐՑՈՒՄ ՉԵՂԱՐԿԵԼՈՒՑ ԱՌԱՋ
+            if(confirm("Հաստատ չեղարկե՞լ կատարված առաջադրանքը: \nԳումարը հետ կվերցվի խաղացողից:")) {
+                await update(taskRef, { status: 'pending' });
+                await set(userCoinsRef, currentCoins - cost);
+            }
         } else {
-            // Եթե PENDING է, սարքում ենք passed ու տալիս գումարը
             await update(taskRef, { status: 'passed' });
             await set(userCoinsRef, currentCoins + cost);
         }
