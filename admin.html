@@ -22,13 +22,11 @@
         .btn-add { background: #27ae60; color: white; font-size: 20px; margin: 20px auto; display: block; }
         .btn-enter { background: #3498db; color: white; margin-top: 10px; }
         .btn-change { background: #e67e22; color: white; margin-top: 10px; margin-left: 5px; } 
-        /* ՆՈՐ COPY ԿՈՃԱԿԻ ԳՈՒՅՆԸ */
         .btn-copy { background: #9b59b6; color: white; margin-top: 10px; margin-left: 5px; }
         .btn-delete { background: #e74c3c; color: white; margin-top: 10px; margin-left: 5px; }
         .btn-passed { padding: 5px 10px; font-size: 12px; transition: 0.2s; }
         .btn-back { background: #95a5a6; color: white; margin-bottom: 20px; }
 
-        /* Modal / Forms */
         .hidden { display: none; }
         .form-group { margin-bottom: 15px; }
         input { width: 100%; padding: 10px; margin-top: 5px; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box; }
@@ -47,7 +45,6 @@
         <button class="btn btn-back" onclick="showMenu()">← Հետ դեպի Մենյու</button>
         <h2 id="selected-user-title"></h2>
         <button class="btn btn-add" onclick="showAddGame()">+</button>
-        
         <div id="games-container" class="game-grid"></div>
     </div>
 
@@ -58,15 +55,8 @@
             <input type="text" id="gameImage" placeholder="Game Image URL">
             <input type="text" id="gameUrl" placeholder="Game URL">
         </div>
-        
         <h3>Tasks <button class="btn btn-add" style="display:inline; padding: 2px 10px;" onclick="addTaskInput()">+</button></h3>
-        <div id="tasks-inputs">
-            <div class="task-input-row">
-                <input type="text" placeholder="Task description" class="task-name">
-                <input type="number" placeholder="Cost" class="task-cost" style="width: 80px;">
-            </div>
-        </div>
-        
+        <div id="tasks-inputs"></div>
         <button class="btn btn-add" onclick="saveGame()">ՊԱՀՊԱՆԵԼ</button>
         <button class="btn btn-back" onclick="hideAddGame()">Չեղարկել</button>
     </div>
@@ -96,27 +86,24 @@
     const auth = getAuth(app); 
 
     const ADMIN_UID = "EQwgbSiI8He58MjrCune8jpc0eG2"; 
-
-    onAuthStateChanged(auth, (user) => {
-        if (!user || user.uid !== ADMIN_UID) {
-            alert("Մուտքն արգելված է միայն ադմինին:");
-            window.location.href = "index.html";
-        }
-    });
-
     let currentUid = "";
     let currentGameId = "";
     let editingGameId = null;
+
+    onAuthStateChanged(auth, (user) => {
+        if (!user || user.uid !== ADMIN_UID) {
+            window.location.href = "index.html";
+        }
+    });
 
     onValue(ref(db, 'users'), (snapshot) => {
         const listDiv = document.getElementById('uid-list');
         listDiv.innerHTML = "";
         snapshot.forEach((child) => {
-            const uid = child.key;
             const div = document.createElement('div');
             div.className = 'uid-item';
-            div.innerText = uid;
-            div.onclick = () => openUser(uid);
+            div.innerText = child.key;
+            div.onclick = () => openUser(child.key);
             listDiv.appendChild(div);
         });
     });
@@ -149,69 +136,14 @@
                         <button class="btn btn-change" onclick="editGame('${gameId}')">Change</button>
                         <button class="btn btn-copy" onclick="copyGame('${gameId}')">Copy</button>
                         <button class="btn btn-delete" onclick="deleteGame('${gameId}')">Delete</button>
-                    </div>
-                `;
+                    </div>`;
             });
         });
     }
 
-    // ՆՈՐ ՖՈՒՆԿՑԻԱ ԽԱՂԸ ՊԱՏՃԵՆԵԼՈՒ ՀԱՄԱՐ
-    window.copyGame = async (gameId) => {
-        const snapshot = await get(ref(db, `users/${currentUid}/games/${gameId}`));
-        const game = snapshot.val();
-        
-        if(game) {
-            let cleanTasks = {};
-            if(game.tasks) {
-                Object.values(game.tasks).forEach(task => {
-                    const newTaskId = push(ref(db)).key;
-                    cleanTasks[newTaskId] = { 
-                        desc: task.desc, 
-                        cost: task.cost, 
-                        status: 'pending' // Պատճենելիս միշտ սարքում ենք չարված
-                    };
-                });
-            }
-
-            const newGameRef = push(ref(db, `users/${currentUid}/games`));
-            await set(newGameRef, { 
-                name: game.name + " (Copy)", 
-                image: game.image, 
-                url: game.url, 
-                tasks: cleanTasks 
-            });
-            alert("Խաղը պատճենվեց:");
-        }
-    };
-
-    window.editGame = async (gameId) => {
-        editingGameId = gameId; 
-        document.getElementById('view-user').classList.add('hidden');
-        document.getElementById('view-add-game').classList.remove('hidden');
-
-        const snapshot = await get(ref(db, `users/${currentUid}/games/${gameId}`));
-        const game = snapshot.val();
-
-        document.getElementById('gameName').value = game.name || "";
-        document.getElementById('gameImage').value = game.image || "";
-        document.getElementById('gameUrl').value = game.url || "";
-
-        const tasksContainer = document.getElementById('tasks-inputs');
-        tasksContainer.innerHTML = ""; 
-
-        if (game.tasks) {
-            Object.entries(game.tasks).forEach(([taskId, task]) => {
-                const row = document.createElement('div');
-                row.className = 'task-input-row';
-                row.dataset.taskId = taskId; 
-                row.dataset.status = task.status || 'pending'; 
-                row.innerHTML = `<input type="text" placeholder="Task description" class="task-name" value="${task.desc}">
-                                 <input type="number" placeholder="Cost" class="task-cost" style="width: 80px;" value="${task.cost}">`;
-                tasksContainer.appendChild(row);
-            });
-        } else {
-            addTaskInput();
-        }
+    window.hideAddGame = () => {
+        document.getElementById('view-add-game').classList.add('hidden');
+        document.getElementById('view-user').classList.remove('hidden'); // Տանում է գլխավոր
     };
 
     window.showAddGame = () => {
@@ -219,61 +151,77 @@
         document.getElementById('gameName').value = "";
         document.getElementById('gameImage').value = "";
         document.getElementById('gameUrl').value = "";
-        document.getElementById('tasks-inputs').innerHTML = `
-            <div class="task-input-row">
-                <input type="text" placeholder="Task description" class="task-name">
-                <input type="number" placeholder="Cost" class="task-cost" style="width: 80px;">
-            </div>`;
+        document.getElementById('tasks-inputs').innerHTML = "";
+        addTaskInput();
+        document.getElementById('view-user').classList.add('hidden');
         document.getElementById('view-add-game').classList.remove('hidden');
     };
 
-    window.hideAddGame = () => document.getElementById('view-add-game').classList.add('hidden');
-
-    window.addTaskInput = () => {
-        const row = document.createElement('div');
-        row.className = 'task-input-row';
-        row.innerHTML = `<input type="text" placeholder="Task description" class="task-name">
-                         <input type="number" placeholder="Cost" class="task-cost" style="width: 80px;">`;
-        document.getElementById('tasks-inputs').appendChild(row);
+    window.editGame = async (gameId) => {
+        editingGameId = gameId; 
+        const snapshot = await get(ref(db, `users/${currentUid}/games/${gameId}`));
+        const game = snapshot.val();
+        document.getElementById('gameName').value = game.name || "";
+        document.getElementById('gameImage').value = game.image || "";
+        document.getElementById('gameUrl').value = game.url || "";
+        const tasksContainer = document.getElementById('tasks-inputs');
+        tasksContainer.innerHTML = ""; 
+        if (game.tasks) {
+            Object.entries(game.tasks).forEach(([taskId, task]) => {
+                const row = document.createElement('div');
+                row.className = 'task-input-row';
+                row.dataset.taskId = taskId; 
+                row.dataset.status = task.status || 'pending'; 
+                row.innerHTML = `<input type="text" class="task-name" value="${task.desc}">
+                                 <input type="number" class="task-cost" style="width: 80px;" value="${task.cost}">`;
+                tasksContainer.appendChild(row);
+            });
+        } else { addTaskInput(); }
+        document.getElementById('view-user').classList.add('hidden');
+        document.getElementById('view-add-game').classList.remove('hidden');
     };
 
-    window.saveGame = () => {
+    window.saveGame = async () => {
         const name = document.getElementById('gameName').value;
         const image = document.getElementById('gameImage').value;
         const url = document.getElementById('gameUrl').value;
         const taskNames = document.querySelectorAll('.task-name');
         const taskCosts = document.querySelectorAll('.task-cost');
-
         let tasks = {};
         taskNames.forEach((input, index) => {
             if(input.value) {
                 const row = input.parentElement;
-                const existingId = row.dataset && row.dataset.taskId;
-                const taskId = existingId ? existingId : push(ref(db)).key;
-                const status = (row.dataset && row.dataset.status) ? row.dataset.status : 'pending';
-                
-                tasks[taskId] = { desc: input.value, cost: parseInt(taskCosts[index].value) || 0, status: status };
+                const taskId = row.dataset.taskId || push(ref(db)).key;
+                tasks[taskId] = { desc: input.value, cost: parseInt(taskCosts[index].value) || 0, status: row.dataset.status || 'pending' };
             }
         });
 
+        const gameData = { name, image, url, tasks };
         if (editingGameId) {
-            update(ref(db, `users/${currentUid}/games/${editingGameId}`), { name, image, url, tasks }).then(() => {
-                hideAddGame();
-                editingGameId = null; 
-            });
+            await update(ref(db, `users/${currentUid}/games/${editingGameId}`), gameData);
         } else {
-            const newGameRef = push(ref(db, `users/${currentUid}/games`));
-            set(newGameRef, { name, image, url, tasks }).then(() => {
-                hideAddGame();
-            });
+            await set(push(ref(db, `users/${currentUid}/games`)), gameData);
+        }
+        hideAddGame(); // Վերադարձ գլխավոր
+    };
+
+    window.copyGame = async (gameId) => {
+        const snapshot = await get(ref(db, `users/${currentUid}/games/${gameId}`));
+        const game = snapshot.val();
+        if(game) {
+            let cleanTasks = {};
+            if(game.tasks) {
+                Object.values(game.tasks).forEach(t => {
+                    cleanTasks[push(ref(db)).key] = { desc: t.desc, cost: t.cost, status: 'pending' };
+                });
+            }
+            await set(push(ref(db, `users/${currentUid}/games`)), { ...game, name: game.name + " (Copy)", tasks: cleanTasks });
+            alert("Պատճենվեց:");
         }
     };
 
-    // ՋՆՋԵԼՈՒ ԱՆՎՏԱՆԳՈՒԹՅՈՒՆ
     window.deleteGame = (gameId) => {
-        if(confirm("Հաստատ ջնջե՞լ խաղը: \nԱյս գործողությունը անդառնալի է:")) {
-            remove(ref(db, `users/${currentUid}/games/${gameId}`));
-        }
+        if(confirm("Հաստատ ջնջե՞լ խաղը:")) remove(ref(db, `users/${currentUid}/games/${gameId}`));
     };
 
     window.enterGame = (gameId, gameName) => {
@@ -281,45 +229,35 @@
         document.getElementById('view-user').classList.add('hidden');
         document.getElementById('view-tasks').classList.remove('hidden');
         document.getElementById('task-game-name').innerText = gameName;
-        
         onValue(ref(db, `users/${currentUid}/games/${gameId}/tasks`), (snapshot) => {
             const list = document.getElementById('task-list');
             list.innerHTML = "";
             snapshot.forEach((child) => {
                 const task = child.val();
-                const taskId = child.key;
                 const isPassed = task.status === 'passed';
-                
                 list.innerHTML += `
                     <div style="padding:10px; border-bottom:1px solid #ddd; display:flex; justify-content:space-between; align-items:center;">
-                    <span>${task.desc} (<b>${task.cost}</b> coins)</span>
-                    <button class="btn btn-passed" 
-                    style="background: ${isPassed ? '#27ae60' : '#e67e22'}; color: white;" 
-                    onclick="toggleTask('${taskId}', ${task.cost}, ${isPassed})">
-                    ${isPassed ? 'PASSED' : 'PASS'}
-                    </button>
-                    </div>
-                `;
+                        <span>${task.desc} (<b>${task.cost}</b>)</span>
+                        <button class="btn btn-passed" style="background: ${isPassed ? '#27ae60' : '#e67e22'}; color: white;" 
+                                onclick="toggleTask('${child.key}', ${task.cost}, ${isPassed})">
+                            ${isPassed ? 'PASSED' : 'PASS'}
+                        </button>
+                    </div>`;
             });
         });
     };
 
-    // ՉԵՂԱՐԿԵԼՈՒ ԱՆՎՏԱՆԳՈՒԹՅՈՒՆ
     window.toggleTask = async (taskId, cost, isPassed) => {
-        const taskRef = ref(db, `users/${currentUid}/games/${currentGameId}/tasks/${taskId}`);
         const userCoinsRef = ref(db, `users/${currentUid}/coins`);
-
         const snapshot = await get(userCoinsRef);
         const currentCoins = snapshot.val() || 0;
-
         if (isPassed) {
-            // ՀԱՐՑՈՒՄ ՉԵՂԱՐԿԵԼՈՒՑ ԱՌԱՋ
-            if(confirm("Հաստատ չեղարկե՞լ կատարված առաջադրանքը: \nԳումարը հետ կվերցվի խաղացողից:")) {
-                await update(taskRef, { status: 'pending' });
+            if(confirm("Հաստատ չեղարկե՞լ:")) {
+                await update(ref(db, `users/${currentUid}/games/${currentGameId}/tasks/${taskId}`), { status: 'pending' });
                 await set(userCoinsRef, currentCoins - cost);
             }
         } else {
-            await update(taskRef, { status: 'passed' });
+            await update(ref(db, `users/${currentUid}/games/${currentGameId}/tasks/${taskId}`), { status: 'passed' });
             await set(userCoinsRef, currentCoins + cost);
         }
     };
@@ -327,6 +265,13 @@
     window.backToUser = () => {
         document.getElementById('view-tasks').classList.add('hidden');
         document.getElementById('view-user').classList.remove('hidden');
+    };
+
+    window.addTaskInput = () => {
+        const row = document.createElement('div');
+        row.className = 'task-input-row';
+        row.innerHTML = `<input type="text" placeholder="Task" class="task-name"><input type="number" placeholder="Cost" class="task-cost" style="width: 80px;">`;
+        document.getElementById('tasks-inputs').appendChild(row);
     };
 </script>
 </body>
