@@ -182,19 +182,37 @@
     };
 
     window.saveGame = async () => {
-        const name = document.getElementById('gameName').value;
-        const image = document.getElementById('gameImage').value;
-        const url = document.getElementById('gameUrl').value;
-        const taskNames = document.querySelectorAll('.task-name');
-        const taskCosts = document.querySelectorAll('.task-cost');
-        let tasks = {};
-        taskNames.forEach((input, index) => {
-            if(input.value) {
-                const row = input.parentElement;
-                const taskId = row.dataset.taskId || push(ref(db)).key;
-                tasks[taskId] = { desc: input.value, cost: parseInt(taskCosts[index].value) || 0, status: row.dataset.status || 'pending' };
-            }
-        });
+    const name = document.getElementById('gameName').value;
+    const image = document.getElementById('gameImage').value;
+    const url = document.getElementById('gameUrl').value;
+    const taskNames = document.querySelectorAll('.task-name');
+    const taskCosts = document.querySelectorAll('.task-cost');
+
+    let tasks = {};
+    taskNames.forEach((input, index) => {
+        if(input.value) {
+            const row = input.parentElement;
+            const taskId = row.dataset.taskId || push(ref(db)).key;
+            tasks[taskId] = { 
+                desc: input.value, 
+                cost: parseInt(taskCosts[index].value) || 0, 
+                status: row.dataset.status || 'pending' 
+            };
+        }
+    });
+
+    // Սա այն տվյալներն են, որոնք ադմինը ՓՈԽՈՒՄ Է
+    const updateData = { name, image, url, tasks };
+
+    if (editingGameId) {
+        // ԿԱՐԵՎՈՐ. update-ը ՉԻ ՋՆՋՈՒՄ levelPrice-ը կամ այլ դաշտեր
+        await update(ref(db, `users/${currentUid}/games/${editingGameId}`), updateData);
+    } else {
+        await set(push(ref(db, `users/${currentUid}/games`)), updateData);
+    }
+    
+    hideAddGame(); // Սա քեզ հետ կտանի խաղերի ցուցակ, ոչ թե դատարկություն
+};
 
         const gameData = { name, image, url, tasks };
         if (editingGameId) {
