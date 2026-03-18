@@ -115,7 +115,6 @@
         <input type="text" id="promo-input" placeholder="Введите промокод..." class="promo-input-style">
         <br>
         <button class="btn" onclick="activatePromo()" style="background: #27ae60;">Активировать</button>
-        <button class="btn" onclick="closeModals()" style="background: #95a5a6; margin-left: 10px;">Закрыть</button>
     </div>
 </div>
 
@@ -209,7 +208,7 @@
         }
     };
 
-    // --- ՄՆԱՑԱԾԸ (Անփոփոխ) ---
+    // --- ՄՆԱՑԱԾԸ ---
 
     function getLevelCost(currentLevel) {
         return currentLevel * (globalSettings.levelPrice || 50);
