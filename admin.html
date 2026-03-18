@@ -21,10 +21,9 @@
         .btn { padding: 10px 15px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; }
         .btn-add { background: #27ae60; color: white; font-size: 20px; margin: 20px auto; display: block; }
         .btn-enter { background: #3498db; color: white; margin-top: 10px; }
-        /* ԱՎԵԼԱՑՎԱԾ Է CHANGE ԿՈՃԱԿԻ ԳՈՒՅՆԸ */
         .btn-change { background: #e67e22; color: white; margin-top: 10px; margin-left: 5px; } 
         .btn-delete { background: #e74c3c; color: white; margin-top: 10px; margin-left: 5px; }
-        .btn-passed { background: #f1c40f; color: #000; padding: 5px 10px; font-size: 12px; }
+        .btn-passed { background: #f1c40f; color: #000; padding: 5px 10px; font-size: 12px; transition: 0.2s; }
         .btn-back { background: #95a5a6; color: white; margin-bottom: 20px; }
 
         /* Modal / Forms */
@@ -104,7 +103,7 @@
 
     let currentUid = "";
     let currentGameId = "";
-    let editingGameId = null; // ԱՎԵԼԱՑՎԱԾ Է. Հիշում է՝ որ խաղն ենք փոփոխում
+    let editingGameId = null;
 
     onValue(ref(db, 'users'), (snapshot) => {
         const listDiv = document.getElementById('uid-list');
@@ -139,7 +138,6 @@
             snapshot.forEach((child) => {
                 const game = child.val();
                 const gameId = child.key;
-                // ԱՎԵԼԱՑՎԱԾ Է CHANGE ԿՈՃԱԿԸ ՆԵՐՔԵՎԻ ՏՈՂՈՒՄ
                 container.innerHTML += `
                     <div class="admin-game-card">
                         <img src="${game.image}" alt="">
@@ -153,13 +151,11 @@
         });
     }
 
-    // ԱՎԵԼԱՑՎԱԾ Է ՓՈՓՈԽԵԼՈՒ ՖՈՒՆԿՑԻԱՆ
     window.editGame = async (gameId) => {
         editingGameId = gameId; 
         document.getElementById('view-user').classList.add('hidden');
         document.getElementById('view-add-game').classList.remove('hidden');
 
-        // Ստանում ենք հին տվյալները և լցնում դաշտերի մեջ
         const snapshot = await get(ref(db, `users/${currentUid}/games/${gameId}`));
         const game = snapshot.val();
 
@@ -174,8 +170,8 @@
             Object.entries(game.tasks).forEach(([taskId, task]) => {
                 const row = document.createElement('div');
                 row.className = 'task-input-row';
-                row.dataset.taskId = taskId; // Պահում ենք ID-ն
-                row.dataset.status = task.status || 'pending'; // Պահում ենք կարգավիճակը
+                row.dataset.taskId = taskId; 
+                row.dataset.status = task.status || 'pending'; 
                 row.innerHTML = `<input type="text" placeholder="Task description" class="task-name" value="${task.desc}">
                                  <input type="number" placeholder="Cost" class="task-cost" style="width: 80px;" value="${task.cost}">`;
                 tasksContainer.appendChild(row);
@@ -185,7 +181,6 @@
         }
     };
 
-    // ԱՎԵԼԱՑՎԱԾ Է ՄԱՔՐԵԼՈՒ ԼՈԳԻԿԱՆ, ՈՐ ՆՈՐ ԽԱՂ ԱՎԵԼԱՑՆԵԼՈՒՑ ՀԻՆԸ ՉԵՐԵՎԱ
     window.showAddGame = () => {
         editingGameId = null;
         document.getElementById('gameName').value = "";
@@ -209,7 +204,6 @@
         document.getElementById('tasks-inputs').appendChild(row);
     };
 
-    // ԱՎԵԼԱՑՎԱԾ Է EDIT-Ի ՍՏՈՒԳՈՒՄԸ ՍԱՎԵ ԱՆԵԼՈՒՑ
     window.saveGame = () => {
         const name = document.getElementById('gameName').value;
         const image = document.getElementById('gameImage').value;
@@ -221,7 +215,6 @@
         taskNames.forEach((input, index) => {
             if(input.value) {
                 const row = input.parentElement;
-                // Եթե խմբագրում ենք, վերցնում ենք հին ID-ն և կարգավիճակը, եթե ոչ՝ սարքում ենք նորը
                 const existingId = row.dataset && row.dataset.taskId;
                 const taskId = existingId ? existingId : push(ref(db)).key;
                 const status = (row.dataset && row.dataset.status) ? row.dataset.status : 'pending';
@@ -231,17 +224,13 @@
         });
 
         if (editingGameId) {
-            // Եթե փոփոխում ենք արդեն գոյություն ունեցող խաղ
             update(ref(db, `users/${currentUid}/games/${editingGameId}`), { name, image, url, tasks }).then(() => {
-                alert("Խաղը հաջողությամբ փոփոխվեց:");
                 hideAddGame();
                 editingGameId = null; 
             });
         } else {
-            // Եթե ավելացնում ենք նորը (քո հին լոգիկան)
             const newGameRef = push(ref(db, `users/${currentUid}/games`));
             set(newGameRef, { name, image, url, tasks }).then(() => {
-                alert("Խաղը ավելացվեց:");
                 hideAddGame();
             });
         }
@@ -253,6 +242,7 @@
         }
     };
 
+    // ԱՅՍՏԵՂ ՓՈԽՎԵԼ Է ԿՈՃԱԿԻ ՏԵՍՔՆ ՈՒ ՖՈՒՆԿՑԻԱՅԻ ԿԱՆՉԸ
     window.enterGame = (gameId, gameName) => {
         currentGameId = gameId;
         document.getElementById('view-user').classList.add('hidden');
@@ -266,12 +256,13 @@
                 const task = child.val();
                 const taskId = child.key;
                 const isPassed = task.status === 'passed';
+                
                 list.innerHTML += `
                     <div style="padding:10px; border-bottom:1px solid #ddd; display:flex; justify-content:space-between; align-items:center;">
                         <span>${task.desc} (<b>${task.cost}</b> coins)</span>
-                        <button class="btn btn-passed" ${isPassed ? 'disabled style="background:#ccc"' : ''} 
-                                onclick="passTask('${taskId}', ${task.cost})">
-                            ${isPassed ? 'PASSED' : 'PASS'}
+                        <button class="btn btn-passed" style="background: ${isPassed ? '#e74c3c' : '#27ae60'}; color: white;" 
+                                onclick="toggleTask('${taskId}', ${task.cost}, ${isPassed})">
+                            ${isPassed ? 'ՉԵՂԱՐԿԵԼ' : 'PASS'}
                         </button>
                     </div>
                 `;
@@ -279,17 +270,23 @@
         });
     };
 
-    window.passTask = async (taskId, cost) => {
+    // ՆՈՐ ՖՈՒՆԿՑԻԱ ՀԻՆԻ ՓՈԽԱՐԵՆ, ՈՐԸ ԵՎ ՏԱԼԻՍ Է ԵՎ ՀԵՏ Է ՎԵՐՑՆՈՒՄ ԳՈՒՄԱՐԸ
+    window.toggleTask = async (taskId, cost, isPassed) => {
         const taskRef = ref(db, `users/${currentUid}/games/${currentGameId}/tasks/${taskId}`);
         const userCoinsRef = ref(db, `users/${currentUid}/coins`);
 
-        await update(taskRef, { status: 'passed' });
-
         const snapshot = await get(userCoinsRef);
         const currentCoins = snapshot.val() || 0;
-        await set(userCoinsRef, currentCoins + cost);
-        
-        alert("Գումարը փոխանցվեց խաղացողին:");
+
+        if (isPassed) {
+            // Եթե արդեն PASSED է, հետ ենք տալիս pending ու հանում գումարը
+            await update(taskRef, { status: 'pending' });
+            await set(userCoinsRef, currentCoins - cost);
+        } else {
+            // Եթե PENDING է, սարքում ենք passed ու տալիս գումարը
+            await update(taskRef, { status: 'passed' });
+            await set(userCoinsRef, currentCoins + cost);
+        }
     };
 
     window.backToUser = () => {
