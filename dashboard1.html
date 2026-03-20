@@ -13,37 +13,37 @@
         .stats { display: flex; align-items: center; gap: 40px; font-size: 18px; }
         
         /* Ռանգի ՆՈՐ դիզայն (փոքրացրած, նեղ եզրագծով, էֆեկտներով) */
-        .rank-box {
-            position: relative;
-            width: 40px; /* Փոքրացված չափս */
-            height: 40px;
-            border-radius: 50%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-size: 20px; /* Փոքրացված տեքստ */
-            font-weight: bold;
-            cursor: pointer;
-            z-index: 1; /* Շրջանը վերևում */
-            border: 1px solid #000; /* Նեղ եզրագիծ */
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-            animation: rankPulse 1.5s infinite alternate;
-            transition: 0.3s;
-            overflow: visible; /* Թույլ ենք տալիս, որ ::before-ը երևա դուրս */
-        }
+        /* Ռանգի դիզայն */
+.rank-box {
+    position: relative;
+    width: 38px;  /* Փոքրացրել եմ */
+    height: 38px;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 18px;
+    font-weight: bold;
+    cursor: pointer;
+    z-index: 1; /* ՇՐՋԱՆԸ ԱՌԱՋԻՆ ՊԼԱՆՈՒՄ */
+    border: 1px solid #000; /* Նեղ եզրագիծ */
+    transition: 0.3s;
+    background: inherit; /* Գույնը կվերցնի ռանգի կլասից */
+}
 
-        /* Սա ռանգի հետևի ուղղանկյունն է */
-        .rank-box::before {
-            content: '';
-            position: absolute;
-            top: 50%;
-            left: -15px; /* Փոքրացված երկարություն */
-            right: -15px;
-            height: 18px; /* Փոքրացված բարձրություն */
-            transform: translateY(-50%);
-            z-index: -1; /* Ուղղանկյունը հետևում */
-            border: 1px solid #000; /* Նեղ եզրագիծ */
-        }
+/* Ուղղանկյունը շրջանի հետևում */
+.rank-box::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: -12px;
+    right: -12px;
+    height: 16px;
+    transform: translateY(-50%);
+    z-index: -1; /* ՈՒՂՂԱՆԿՅՈՒՆԸ ԵՏԵՎԻ ՊԼԱՆՈՒՄ */
+    border: 1px solid #000; /* Նեղ եզրագիծ */
+    background: inherit; /* Գույնը կվերցնի շրջանից */
+}
 
         /* Մկնիկը պահելիս անիմացիա */
         .rank-box:hover {
