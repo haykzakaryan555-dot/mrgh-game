@@ -37,9 +37,7 @@
         .promo-info b { color: #27ae60; }
     </style>
 </head>
-<body>
-
-<div class="container">
+<body oncontextmenu="return true;"> <div class="container">
     <div id="view-menu">
         <h2>Խաղացողների Ցուցակ</h2>
         <div id="uid-list">Բեռնվում է...</div>
@@ -104,6 +102,13 @@
     let currentGameId = "";
     let editingGameId = null;
 
+    // Բագի ուղղում. կանխում ենք ավելորդ աջ click-ի իրադարձությունները
+    document.addEventListener('contextmenu', (e) => {
+        if (e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
+            // Թույլ ենք տալիս միայն ստանդարտ վարքը, բայց կանխում ենք սկրիպտային կանչերը
+        }
+    });
+
     onAuthStateChanged(auth, (user) => {
         if (!user || user.uid !== ADMIN_UID) {
             window.location.href = "index.html";
@@ -161,7 +166,11 @@
         if (!code || !reward) { alert("Լրացրեք բոլոր դաշտերը"); return; }
 
         try {
-            await set(ref(db, `promocodes/${code}`), { reward: parseInt(reward) });
+            // Ավելացնում ենք եզակի ID (timestamp), որպեսզի Dashboard-ը հասկանա, որ սա նոր պրոմոկոդ է
+            await set(ref(db, `promocodes/${code}`), { 
+                reward: parseInt(reward),
+                promoId: Date.now() // Սա թույլ կտա նույն անունով կոդը նորից օգտագործել ջնջելուց հետո
+            });
             document.getElementById('admin-promo-code').value = "";
             document.getElementById('admin-promo-reward').value = "";
             alert("Պրոմոկոդը հաջողությամբ ստեղծվեց");
