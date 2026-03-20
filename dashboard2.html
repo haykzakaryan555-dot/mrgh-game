@@ -12,16 +12,60 @@
         .header { display: flex; justify-content: space-between; align-items: center; padding: 15px 0; border-bottom: 1px dotted #ccc; margin-bottom: 20px; }
         .stats { display: flex; align-items: center; gap: 40px; font-size: 18px; }
         
-        /* Ռանգի դիզայն */
+        /* --- ՌԱՆԳԻ ՈՒՂՂՎԱԾ ԴԻԶԱՅՆ --- */
         .rank-box { 
-            background: #fdf5c9; border: 1px solid #d4c57c; padding: 5px 15px; 
-            font-size: 20px; font-weight: bold; position: relative; cursor: pointer;
-            box-shadow: 2px 2px 0px rgba(0,0,0,0.1); transition: 0.2s;
+            position: relative;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            border: 1px solid #000;
+            transition: 0.3s;
+            /* Սա թույլ է տալիս շրջանին ծածկել ուղղանկյունը */
+            transform-style: preserve-3d;
+            z-index: 10;
+            background-color: inherit;
         }
-        .rank-box:hover { transform: scale(1.05); }
+
+        /* Հետևի ուղղանկյունը (թևիկները) */
         .rank-box::before { 
-            content: ''; position: absolute; top: -1px; left: -1px; border: 5px solid transparent; border-top-color: #fff; border-left-color: #fff;
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: -12px;
+            right: -12px;
+            height: 14px;
+            border: 1px solid #000;
+            background-color: inherit;
+            /* Տեղափոխում ենք շրջանի հետևը */
+            transform: translateY(-50%) translateZ(-1px);
+            z-index: -1;
         }
+
+        .rank-box:hover { transform: scale(1.1); }
+
+        /* Ռանգերի գույները և էֆեկտները */
+        .rank-1 { background: radial-gradient(circle, #fffbe0 10%, #ffd700 90%); color: #000; }
+        .rank-2 { background: radial-gradient(circle, #fff5e6 10%, #ff8c00 90%); color: #fff; }
+        .rank-3 { background: radial-gradient(circle, #e6f7ff 10%, #1e90ff 90%); color: #fff; }
+        .rank-4 { background: radial-gradient(circle, #f9f0ff 10%, #ba55d3 90%); color: #fff; }
+        .rank-5 { background: radial-gradient(circle, #f5e6ea 10%, #800020 90%); color: #fff; }
+        .rank-6 { background: radial-gradient(circle, #fbeee6 10%, #d35400 90%); color: #fff; }
+        .rank-7 { background: radial-gradient(circle, #eae6f5 10%, #4b0082 90%); color: #fff; }
+        .rank-8 { background: radial-gradient(circle, #e6e6f5 10%, #00008b 90%); color: #fff; }
+        .rank-9 { 
+            background: radial-gradient(circle, #333 10%, #111 90%);
+            color: #ffd700;
+            border-color: #ffd700;
+            text-shadow: 0 0 5px #ffd700;
+        }
+        .rank-9::before { border-color: #ffd700; }
+        /* -------------------------------- */
 
         /* Լևելի և փողի դիզայն */
         .level-text { cursor: pointer; font-weight: bold; transition: 0.2s; }
@@ -163,7 +207,6 @@
     const db = getDatabase(app);
     const auth = getAuth(app);
 
-    // Փոփոխված UID-ն այստեղ է
     const MY_PAGE_UID = "PCLsbIRHVoMKwFA1bWmNbbk3x4p1";
     let userData = {}; 
     let currentGameUrl = "";
@@ -182,7 +225,6 @@
         }
     });
 
-    // --- ՊՐՈՄՈԿՈԴԻ ՖՈՒՆԿՑԻԱՆԵՐ ---
     window.openPromoModal = () => {
         document.getElementById('promoModal').style.display = 'flex';
         document.getElementById('profile-dropdown').style.display = 'none';
@@ -191,12 +233,9 @@
     window.activatePromo = async () => {
         const promoInput = document.getElementById('promo-input');
         const promoCode = promoInput.value.trim();
-        
         if (!promoCode) { alert("Введите код!"); return; }
-
         const promoRef = ref(db, `promocodes/${promoCode}`);
         const snapshot = await get(promoRef);
-
         if (snapshot.exists()) {
             const promoData = snapshot.val();
             const reward = parseInt(promoData.reward);
@@ -206,24 +245,29 @@
             alert(`Успешно! Вы получили ${reward} coins!`);
             promoInput.value = "";
             closeModals();
-        } else {
-            alert("Неверный промокод!");
-        }
+        } else { alert("Неверный промокод!"); }
     };
 
-    // --- ՄՆԱՑԱԾԸ ---
+    function getLevelCost(currentLevel) { return currentLevel * (globalSettings.levelPrice || 50); }
 
-    function getLevelCost(currentLevel) {
-        return currentLevel * (globalSettings.levelPrice || 50);
-    }
-
+    // --- ԹԱՐՄԱՑՎԱԾ loadUserData ---
     function loadUserData() {
         onValue(ref(db, `users/${MY_PAGE_UID}`), (snapshot) => {
             userData = snapshot.val();
             if(userData) {
                 document.getElementById('user-coins').innerText = userData.coins || 0;
                 document.getElementById('user-level').innerText = userData.level || 1;
-                document.getElementById('user-rank').innerText = userData.rank || 1;
+                
+                // Ռանգի էլեմենտի թարմացում
+                const rankEl = document.getElementById('user-rank');
+                const currentRank = userData.rank || 1;
+                rankEl.innerText = currentRank;
+                
+                // Կլասների թարմացում գույների համար
+                rankEl.className = 'rank-box';
+                const rankClassNum = currentRank > 9 ? 9 : currentRank;
+                rankEl.classList.add('rank-' + rankClassNum);
+
                 document.getElementById('user-name').innerText = userData.username || "Player";
                 document.getElementById('user-avatar').src = userData.avatar || "https://via.placeholder.com/50";
             }
