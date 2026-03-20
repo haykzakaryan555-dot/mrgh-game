@@ -14,10 +14,11 @@
         
         /* Ռանգի ՆՈՐ դիզայն (փոքրացրած, նեղ եզրագծով, էֆեկտներով) */
         /* Ռանգի դիզայն */
+/* ՇՐՋԱՆԸ (Parent) */
 .rank-box {
     position: relative;
-    width: 38px;  /* Փոքրացրել եմ */
-    height: 38px;
+    width: 36px;  /* Փոքրացրած չափս */
+    height: 36px;
     border-radius: 50%;
     display: flex;
     justify-content: center;
@@ -25,26 +26,29 @@
     font-size: 18px;
     font-weight: bold;
     cursor: pointer;
-    z-index: 1; /* ՇՐՋԱՆԸ ԱՌԱՋԻՆ ՊԼԱՆՈՒՄ */
-    border: 1px solid #000; /* Նեղ եզրագիծ */
-    transition: 0.3s;
-    background: inherit; /* Գույնը կվերցնի ռանգի կլասից */
+    border: 1px solid #000;
+    
+    /* ԱՅՍ 3 ՏՈՂՆ ԵՆ ԼՈՒԾՈՒՄ ՀԱՐՑԸ */
+    transform-style: preserve-3d; 
+    z-index: 10;
+    background-color: inherit; /* Վերցնում է ռանգի գույնը */
 }
 
-/* Ուղղանկյունը շրջանի հետևում */
+/* ՈՒՂՂԱՆԿՅՈՒՆԸ (Pseudo-element) */
 .rank-box::before {
     content: '';
     position: absolute;
     top: 50%;
     left: -12px;
     right: -12px;
-    height: 16px;
-    transform: translateY(-50%);
-    z-index: -1; /* ՈՒՂՂԱՆԿՅՈՒՆԸ ԵՏԵՎԻ ՊԼԱՆՈՒՄ */
-    border: 1px solid #000; /* Նեղ եզրագիծ */
-    background: inherit; /* Գույնը կվերցնի շրջանից */
+    height: 14px;
+    border: 1px solid #000;
+    background-color: inherit; /* Վերցնում է նույն գույնը */
+    
+    /* ՍԱ ՈՒՂՂԱՆԿՅՈՒՆԸ ՏԱՆՈՒՄ Է ՇՐՋԱՆԻ ՀԵՏԵՎԸ */
+    transform: translateY(-50%) translateZ(-1px); 
+    z-index: -1;
 }
-
         /* Մկնիկը պահելիս անիմացիա */
         .rank-box:hover {
             transform: scale(1.1) rotate(3deg);
