@@ -1,439 +1,439 @@
 <!DOCTYPE html>
 <html lang="hy">
 <head>
-    <meta charset="UTF-8">
-    <title>Game Dashboard</title>
-    <style>
-        /* Ընդհանուր դիզայն */
-        body { font-family: 'Trebuchet MS', sans-serif; background: #ffffff; margin: 0; padding: 0; color: #000; }
-        .container { max-width: 900px; margin: 0 auto; padding: 20px; }
+    <meta charset="UTF-8">
+    <title>Game Dashboard</title>
+    <style>
+        /* Ընդհանուր դիզայն */
+        body { font-family: 'Trebuchet MS', sans-serif; background: #ffffff; margin: 0; padding: 0; color: #000; }
+        .container { max-width: 900px; margin: 0 auto; padding: 20px; }
 
-        /* Վերևի պանել (Header) */
-        .header { display: flex; justify-content: space-between; align-items: center; padding: 15px 0; border-bottom: 1px dotted #ccc; margin-bottom: 20px; }
-        .stats { display: flex; align-items: center; gap: 40px; font-size: 18px; }
-        
-        /* Ռանգի ՆՈՐ դիզայն (փոքրացրած, նեղ եզրագծով, էֆեկտներով) */
-        /* Ռանգի դիզայն */
+        /* Վերևի պանել (Header) */
+        .header { display: flex; justify-content: space-between; align-items: center; padding: 15px 0; border-bottom: 1px dotted #ccc; margin-bottom: 20px; }
+        .stats { display: flex; align-items: center; gap: 40px; font-size: 18px; }
+        
+        /* Ռանգի ՆՈՐ դիզայն (փոքրացրած, նեղ եզրագծով, էֆեկտներով) */
+        /* Ռանգի դիզայն */
 /* ՇՐՋԱՆԸ (Parent) */
 .rank-box {
-    position: relative;
-    width: 36px;  /* Փոքրացրած չափս */
-    height: 36px;
-    border-radius: 50%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    font-size: 18px;
-    font-weight: bold;
-    cursor: pointer;
-    border: 1px solid #000;
-    
-    /* ԱՅՍ 3 ՏՈՂՆ ԵՆ ԼՈՒԾՈՒՄ ՀԱՐՑԸ */
-    transform-style: preserve-3d; 
-    z-index: 10;
-    background-color: inherit; /* Վերցնում է ռանգի գույնը */
+    position: relative;
+    width: 36px;  /* Փոքրացրած չափս */
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 18px;
+    font-weight: bold;
+    cursor: pointer;
+    border: 1px solid #000;
+    
+    /* ԱՅՍ 3 ՏՈՂՆ ԵՆ ԼՈՒԾՈՒՄ ՀԱՐՑԸ */
+    transform-style: preserve-3d; 
+    z-index: 10;
+    background-color: inherit; /* Վերցնում է ռանգի գույնը */
 }
 
 /* ՈՒՂՂԱՆԿՅՈՒՆԸ (Pseudo-element) */
 .rank-box::before {
-    content: '';
-    position: absolute;
-    top: 50%;
-    left: -12px;
-    right: -12px;
-    height: 14px;
-    border: 1px solid #000;
-    background-color: inherit; /* Վերցնում է նույն գույնը */
-    
-    /* ՍԱ ՈՒՂՂԱՆԿՅՈՒՆԸ ՏԱՆՈՒՄ Է ՇՐՋԱՆԻ ՀԵՏԵՎԸ */
-    transform: translateY(-50%) translateZ(-1px); 
-    z-index: -1;
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: -12px;
+    right: -12px;
+    height: 14px;
+    border: 1px solid #000;
+    background-color: inherit; /* Վերցնում է նույն գույնը */
+    
+    /* ՍԱ ՈՒՂՂԱՆԿՅՈՒՆԸ ՏԱՆՈՒՄ Է ՇՐՋԱՆԻ ՀԵՏԵՎԸ */
+    transform: translateY(-50%) translateZ(-1px); 
+    z-index: -1;
 }
-        /* Մկնիկը պահելիս անիմացիա */
-        .rank-box:hover {
-            transform: scale(1.1) rotate(3deg);
-        }
+        /* Մկնիկը պահելիս անիմացիա */
+        .rank-box:hover {
+            transform: scale(1.1) rotate(3deg);
+        }
 
-        /* Շնչող անիմացիայի կոդը */
-        @keyframes rankPulse {
-            0% { transform: scale(1); box-shadow: 0 0 3px rgba(0,0,0,0.1); }
-          100% { transform: scale(1.03); box-shadow: 0 0 8px rgba(0,0,0,0.3); }
-        }
+        /* Շնչող անիմացիայի կոդը */
+        @keyframes rankPulse {
+            0% { transform: scale(1); box-shadow: 0 0 3px rgba(0,0,0,0.1); }
+            100% { transform: scale(1.03); box-shadow: 0 0 8px rgba(0,0,0,0.3); }
+        }
 
-        /* --- ՌԱՆԳԵՐԻ ԳՈՒՅՆԵՐԸ ԵՎ ԷՖԵԿՏՆԵՐԸ --- */
-        /* Ավելացված են radial-gradient և inset box-shadow որպես էֆեկտներ */
-        
-        /* Ռանգ 1 - Դեղին */
-        .rank-1 { background: radial-gradient(circle, #fffbe0 10%, #ffd700 90%); color: #000; box-shadow: inset 0 0 10px rgba(0,0,0,0.1); }
-        .rank-1::before { background: #ffd700; }
-        
-        /* Ռանգ 2 - Գազարագույն */
-        .rank-2 { background: radial-gradient(circle, #fff5e6 10%, #ff8c00 90%); color: #fff; text-shadow: 1px 1px 2px #000; box-shadow: inset 0 0 10px rgba(0,0,0,0.15); }
-        .rank-2::before { background: #ff8c00; }
-        
-        /* Ռանգ 3 - Կապույտ */
-        .rank-3 { background: radial-gradient(circle, #e6f7ff 10%, #1e90ff 90%); color: #fff; text-shadow: 1px 1px 2px #000; box-shadow: inset 0 0 10px rgba(0,0,0,0.2); }
-        .rank-3::before { background: #1e90ff; }
-        
-        /* Ռանգ 4 - Բաց մանուշակագույն */
-        .rank-4 { background: radial-gradient(circle, #f9f0ff 10%, #ba55d3 90%); color: #fff; text-shadow: 1px 1px 2px #000; box-shadow: inset 0 0 10px rgba(0,0,0,0.2); }
-        .rank-4::before { background: #ba55d3; }
-        
-        /* Ռանգ 5 - Բորդո և Մոխրագույն */
-        .rank-5 { background: radial-gradient(circle, #f5e6ea 10%, #800020 90%); color: #fff; text-shadow: 1px 1px 2px #000; box-shadow: inset 0 0 10px rgba(0,0,0,0.25); }
-        .rank-5::before { background: #808080; }
-        
-        /* Ռանգ 6 - Բաց մուգ գազարագույն */
-        .rank-6 { background: radial-gradient(circle, #fbeee6 10%, #d35400 90%); color: #fff; text-shadow: 1px 1px 2px #000; box-shadow: inset 0 0 10px rgba(0,0,0,0.25); }
-        .rank-6::before { background: #d35400; }
-        
-        /* Ռանգ 7 - Մուգ մանուշակագույն */
-        .rank-7 { background: radial-gradient(circle, #eae6f5 10%, #4b0082 90%); color: #fff; text-shadow: 1px 1px 2px #000; box-shadow: inset 0 0 10px rgba(0,0,0,0.3); }
-        .rank-7::before { background: #4b0082; }
-        
-        /* Ռանգ 8 - Մուգ կապույտ */
-        .rank-8 { background: radial-gradient(circle, #e6e6f5 10%, #00008b 90%); color: #fff; text-shadow: 1px 1px 2px #000; box-shadow: inset 0 0 10px rgba(0,0,0,0.3); }
-        .rank-8::before { background: #00008b; }
+        /* --- ՌԱՆԳԵՐԻ ԳՈՒՅՆԵՐԸ ԵՎ ԷՖԵԿՏՆԵՐԸ --- */
+        /* Ավելացված են radial-gradient և inset box-shadow որպես էֆեկտներ */
+        
+        /* Ռանգ 1 - Դեղին */
+        .rank-1 { background: radial-gradient(circle, #fffbe0 10%, #ffd700 90%); color: #000; box-shadow: inset 0 0 10px rgba(0,0,0,0.1); }
+        .rank-1::before { background: #ffd700; }
+        
+        /* Ռանգ 2 - Գազարագույն */
+        .rank-2 { background: radial-gradient(circle, #fff5e6 10%, #ff8c00 90%); color: #fff; text-shadow: 1px 1px 2px #000; box-shadow: inset 0 0 10px rgba(0,0,0,0.15); }
+        .rank-2::before { background: #ff8c00; }
+        
+        /* Ռանգ 3 - Կապույտ */
+        .rank-3 { background: radial-gradient(circle, #e6f7ff 10%, #1e90ff 90%); color: #fff; text-shadow: 1px 1px 2px #000; box-shadow: inset 0 0 10px rgba(0,0,0,0.2); }
+        .rank-3::before { background: #1e90ff; }
+        
+        /* Ռանգ 4 - Բաց մանուշակագույն */
+        .rank-4 { background: radial-gradient(circle, #f9f0ff 10%, #ba55d3 90%); color: #fff; text-shadow: 1px 1px 2px #000; box-shadow: inset 0 0 10px rgba(0,0,0,0.2); }
+        .rank-4::before { background: #ba55d3; }
+        
+        /* Ռանգ 5 - Բորդո և Մոխրագույն */
+        .rank-5 { background: radial-gradient(circle, #f5e6ea 10%, #800020 90%); color: #fff; text-shadow: 1px 1px 2px #000; box-shadow: inset 0 0 10px rgba(0,0,0,0.25); }
+        .rank-5::before { background: #808080; }
+        
+        /* Ռանգ 6 - Մուգ գազարագույն */
+        .rank-6 { background: radial-gradient(circle, #fbeee6 10%, #d35400 90%); color: #fff; text-shadow: 1px 1px 2px #000; box-shadow: inset 0 0 10px rgba(0,0,0,0.25); }
+        .rank-6::before { background: #d35400; }
+        
+        /* Ռանգ 7 - Մուգ մանուշակագույն */
+        .rank-7 { background: radial-gradient(circle, #eae6f5 10%, #4b0082 90%); color: #fff; text-shadow: 1px 1px 2px #000; box-shadow: inset 0 0 10px rgba(0,0,0,0.3); }
+        .rank-7::before { background: #4b0082; }
+        
+        /* Ռանգ 8 - Մուգ կապույտ */
+        .rank-8 { background: radial-gradient(circle, #e6e6f5 10%, #00008b 90%); color: #fff; text-shadow: 1px 1px 2px #000; box-shadow: inset 0 0 10px rgba(0,0,0,0.3); }
+        .rank-8::before { background: #00008b; }
 
-        /* Ռանգ 9 - Սև և Ոսկեգույն (Premium) */
-        .rank-9 { 
-            background: radial-gradient(circle, #333 10%, #111 90%);
-            color: #ffd700;
-            border-color: #ffd700;
-            text-shadow: 0 0 8px #ffd700;
-            box-shadow: inset 0 0 10px rgba(255,215,0,0.2);
-        }
-        .rank-9::before { 
-            background: #333; 
-            border-color: #ffd700;
-        }
+        /* Ռանգ 9 - Սև և Ոսկեգույն (Premium) */
+        .rank-9 { 
+            background: radial-gradient(circle, #333 10%, #111 90%);
+            color: #ffd700;
+            border-color: #ffd700;
+            text-shadow: 0 0 8px #ffd700;
+            box-shadow: inset 0 0 10px rgba(255,215,0,0.2);
+        }
+        .rank-9::before { 
+            background: #333; 
+            border-color: #ffd700;
+        }
 
-        /* Լևելի և փողի դիզայն */
-        .level-text { cursor: pointer; font-weight: bold; transition: 0.2s; }
-        .level-text:hover { color: #f39c12; }
-        
-        .coin-display { display: flex; align-items: center; gap: 10px; font-size: 18px; }
-        .coin-icon { 
-            background: #fdf5c9; border: 1px solid #d4c57c; border-radius: 50%; 
-            width: 35px; height: 35px; display: flex; justify-content: center; align-items: center; 
-            font-weight: bold; font-size: 20px; color: #000;
-        }
+        /* Լևելի և փողի դիզայն */
+        .level-text { cursor: pointer; font-weight: bold; transition: 0.2s; }
+        .level-text:hover { color: #f39c12; }
+        
+        .coin-display { display: flex; align-items: center; gap: 10px; font-size: 18px; }
+        .coin-icon { 
+            background: #fdf5c9; border: 1px solid #d4c57c; border-radius: 50%; 
+            width: 35px; height: 35px; display: flex; justify-content: center; align-items: center; 
+            font-weight: bold; font-size: 20px; color: #000;
+        }
 
-        /* Օգտատիրոջ պրոֆիլ */
-        .profile { display: flex; align-items: center; gap: 15px; cursor: pointer; position: relative; }
-        .profile img { width: 50px; height: 50px; border-radius: 5px; object-fit: cover; }
-        .profile-name { font-size: 18px; padding-bottom: 5px; border-bottom: 1px solid #000; width: 150px; display: flex; justify-content: space-between; align-items: center;}
-        
-        /* Dropdown Մենյու */
-        .dropdown { display: none; position: absolute; top: 60px; right: 0; background: white; border: 1px solid #4285f4; box-shadow: 0 4px 10px rgba(0,0,0,0.1); width: 165px; z-index: 100; }
-        .dropdown div { padding: 12px 15px; border-bottom: 1px solid #eee; cursor: pointer; font-size: 16px; }
-        .dropdown div:hover { background: #f5f5f5; }
+        /* Օգտատիրոջ պրոֆիլ */
+        .profile { display: flex; align-items: center; gap: 15px; cursor: pointer; position: relative; }
+        .profile img { width: 50px; height: 50px; border-radius: 5px; object-fit: cover; }
+        .profile-name { font-size: 18px; padding-bottom: 5px; border-bottom: 1px solid #000; width: 150px; display: flex; justify-content: space-between; align-items: center;}
+        
+        /* Dropdown Մենյու */
+        .dropdown { display: none; position: absolute; top: 60px; right: 0; background: white; border: 1px solid #4285f4; box-shadow: 0 4px 10px rgba(0,0,0,0.1); width: 165px; z-index: 100; }
+        .dropdown div { padding: 12px 15px; border-bottom: 1px solid #eee; cursor: pointer; font-size: 16px; }
+        .dropdown div:hover { background: #f5f5f5; }
 
-        /* Խաղերի ցուցակ */
-        .game-list { display: flex; flex-direction: column; gap: 20px; }
-        .game-card { display: flex; align-items: center; justify-content: space-between; border-bottom: 1px dotted #ccc; padding-bottom: 20px; }
-        .game-info-wrapper { display: flex; align-items: center; gap: 30px; }
-        .game-image { width: 150px; height: 150px; border-radius: 10px; object-fit: cover; }
-        .game-details h2 { margin: 0 0 10px 0; font-size: 28px; }
-        
-        /* Ստատուսներ */
-        .status { font-size: 14px; margin-bottom: 15px; }
-        .status.done { color: #00d200; } 
-        .status.pending { color: #ff0000; }
+        /* Խաղերի ցուցակ */
+        .game-list { display: flex; flex-direction: column; gap: 20px; }
+        .game-card { display: flex; align-items: center; justify-content: space-between; border-bottom: 1px dotted #ccc; padding-bottom: 20px; }
+        .game-info-wrapper { display: flex; align-items: center; gap: 30px; }
+        .game-image { width: 150px; height: 150px; border-radius: 10px; object-fit: cover; }
+        .game-details h2 { margin: 0 0 10px 0; font-size: 28px; }
+        
+        /* Ստատուսներ */
+        .status { font-size: 14px; margin-bottom: 15px; }
+        .status.done { color: #00d200; } 
+        .status.pending { color: #ff0000; }
 
-        /* Կոճակներ */
-        .btn { background: #333; color: white; border: none; padding: 10px 20px; font-size: 16px; cursor: pointer; border-radius: 3px; font-family: 'Trebuchet MS'; }
-        .btn:hover { background: #444; }
+        /* Կոճակներ */
+        .btn { background: #333; color: white; border: none; padding: 10px 20px; font-size: 16px; cursor: pointer; border-radius: 3px; font-family: 'Trebuchet MS'; }
+        .btn:hover { background: #444; }
 
-        /* Մոդալ Պատուհաններ */
-        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center; }
-        .modal-content { background: white; padding: 30px; max-width: 600px; width: 100%; border-radius: 5px; position: relative; }
-        .close-btn { position: absolute; top: 10px; right: 15px; font-size: 24px; cursor: pointer; color: #888; }
-        
-        /* Պրոմոկոդի ինփութ */
-        .promo-input-style {
-            width: 80%; padding: 10px; margin-bottom: 20px; border: 1px solid #ccc; border-radius: 3px;
-            font-family: 'Trebuchet MS';text-align: center; font-size: 18px;
-        }
+        /* Մոդալ Պատուհաններ */
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center; }
+        .modal-content { background: white; padding: 30px; max-width: 600px; width: 100%; border-radius: 5px; position: relative; }
+        .close-btn { position: absolute; top: 10px; right: 15px; font-size: 24px; cursor: pointer; color: #888; }
+        
+        /* Պրոմոկոդի ինփութ */
+        .promo-input-style {
+            width: 80%; padding: 10px; margin-bottom: 20px; border: 1px solid #ccc; border-radius: 3px;
+            font-family: 'Trebuchet MS';text-align: center; font-size: 18px;
+        }
 
-        .task-list { margin-top: 20px; }
-        .task-item { display: flex; align-items: center; justify-content: space-between; border-bottom: 1px dotted #ccc; padding: 15px 0; font-size: 18px;}
-        .task-item.passed { color: #00d200; }
-        .task-item.pending { color: #000; }
-        .task-desc { display: flex; align-items: center; gap: 10px; }
-        .task-reward { display: flex; align-items: center; gap: 10px; }
-    </style>
+        .task-list { margin-top: 20px; }
+        .task-item { display: flex; align-items: center; justify-content: space-between; border-bottom: 1px dotted #ccc; padding: 15px 0; font-size: 18px;}
+        .task-item.passed { color: #00d200; }
+        .task-item.pending { color: #000; }
+        .task-desc { display: flex; align-items: center; gap: 10px; }
+        .task-reward { display: flex; align-items: center; gap: 10px; }
+    </style>
 </head>
 <body>
 
 <div class="container">
-    <div class="header">
-        <div class="stats">
-            <div class="rank-box" onclick="openRankModal()" id="user-rank">1</div>
-            <div class="level-text" onclick="openLevelModal()">Уровень: <span id="user-level">...</span></div>
-            <div class="coin-display">
-                <div class="coin-icon">C</div>
-                <span id="user-coins">...</span>
-            </div>
-        </div>
+    <div class="header">
+        <div class="stats">
+            <div class="rank-box" onclick="openRankModal()" id="user-rank">1</div>
+            <div class="level-text" onclick="openLevelModal()">Уровень: <span id="user-level">...</span></div>
+            <div class="coin-display">
+                <div class="coin-icon">C</div>
+                <span id="user-coins">...</span>
+            </div>
+        </div>
 
-        <div class="profile" onclick="toggleDropdown()">
-            <img id="user-avatar" src="" alt="Avatar">
-            <div class="profile-name">
-                <span id="user-name">...</span>
-                <span>˅</span>
-            </div>
-            <div class="dropdown" id="profile-dropdown">
-                <div onclick="openPromoModal()">Промокоды</div>
-                <div onclick="logout()">Выйти</div>
-            </div>
-        </div>
-    </div>
+        <div class="profile" onclick="toggleDropdown()">
+            <img id="user-avatar" src="" alt="Avatar">
+            <div class="profile-name">
+                <span id="user-name">...</span>
+                <span>˅</span>
+            </div>
+            <div class="dropdown" id="profile-dropdown">
+                <div onclick="openPromoModal()">Промокоды</div>
+                <div onclick="logout()">Выйти</div>
+            </div>
+        </div>
+    </div>
 
-    <div class="game-list" id="games-container"></div>
+    <div class="game-list" id="games-container"></div>
 </div>
 
 <div class="modal-overlay" id="promoModal">
-    <div class="modal-content" style="text-align: center;">
-        <span class="close-btn" onclick="closeModals()">&times;</span>
-        <h2>Активация промокода</h2>
-        <input type="text" id="promo-input" placeholder="Введите промокод..." class="promo-input-style">
-        <br>
-        <button class="btn" onclick="activatePromo()" style="background: #27ae60;">Активировать</button>
-    </div>
+    <div class="modal-content" style="text-align: center;">
+        <span class="close-btn" onclick="closeModals()">&times;</span>
+        <h2>Активация промокода</h2>
+        <input type="text" id="promo-input" placeholder="Введите промокод..." class="promo-input-style">
+        <br>
+        <button class="btn" onclick="activatePromo()" style="background: #27ae60;">Активировать</button>
+    </div>
 </div>
 
 <div class="modal-overlay" id="tasksModal">
-    <div class="modal-content">
-        <span class="close-btn" onclick="closeModals()">&times;</span>
-        <h2 id="modal-game-name">Название Игры</h2>
-        <div class="task-list" id="modal-task-list"></div>
-        <br>
-        <button class="btn" id="play-btn" onclick="playGame()">Играть</button>
-    </div>
+    <div class="modal-content">
+        <span class="close-btn" onclick="closeModals()">&times;</span>
+        <h2 id="modal-game-name">Название Игры</h2>
+        <div class="task-list" id="modal-task-list"></div>
+        <br>
+        <button class="btn" id="play-btn" onclick="playGame()">Играть</button>
+    </div>
 </div>
 
 <div class="modal-overlay" id="levelModal">
-    <div class="modal-content" style="text-align: center;">
-        <span class="close-btn" onclick="closeModals()">&times;</span>
-        <h2>Улучшение Уровня</h2>
-        <p>Для перехода на следующий уровень требуется: <b id="level-cost">0</b> coins.</p>
-        <button class="btn" onclick="upgradeLevel()" style="background: #27ae60;">Улучшить</button>
-    </div>
+    <div class="modal-content" style="text-align: center;">
+        <span class="close-btn" onclick="closeModals()">&times;</span>
+        <h2>Улучшение Уровня</h2>
+        <p>Для перехода на следующий уровень требуется: <b id="level-cost">0</b> coins.</p>
+        <button class="btn" onclick="upgradeLevel()" style="background: #27ae60;">Улучшить</button>
+    </div>
 </div>
 
 <div class="modal-overlay" id="rankModal">
-    <div class="modal-content" style="text-align: center;">
-        <span class="close-btn" onclick="closeModals()">&times;</span>
-        <h2>Повышение Ранга</h2>
-        <p>Для получения следующего ранга нужен <b>Уровень 10</b> и <b id="rank-cost">0</b> coins.</p>
-        <button class="btn" onclick="upgradeRank()" style="background: #f39c12; color: #000;">Повысить ранг</button>
-    </div>
+    <div class="modal-content" style="text-align: center;">
+        <span class="close-btn" onclick="closeModals()">&times;</span>
+        <h2>Повышение Ранга</h2>
+        <p>Для получения следующего ранга нужен <b>Уровень 10</b> и <b id="rank-cost">0</b> coins.</p>
+        <button class="btn" onclick="upgradeRank()" style="background: #f39c12; color: #000;">Повысить ранг</button>
+    </div>
 </div>
 
 <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { getDatabase, ref, onValue, get, update } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
-    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getDatabase, ref, onValue, get, update } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
-    const firebaseConfig = {
-        apiKey: "AIzaSyDMX2P4uPPL1N2dsh0qEW57rjZc1Z-pyXs",
-        authDomain: "mrgh-game.firebaseapp.com",
-        databaseURL: "https://mrgh-game-default-rtdb.europe-west1.firebasedatabase.app",
-        projectId: "mrgh-game",
-        appId: "1:866665514728:web:d5179ce6836828531a2b5d"
-    };
+    const firebaseConfig = {
+        apiKey: "AIzaSyDMX2P4uPPL1N2dsh0qEW57rjZc1Z-pyXs",
+        authDomain: "mrgh-game.firebaseapp.com",
+        databaseURL: "https://mrgh-game-default-rtdb.europe-west1.firebasedatabase.app",
+        projectId: "mrgh-game",
+        appId: "1:866665514728:web:d5179ce6836828531a2b5d"
+    };
 
-    const app = initializeApp(firebaseConfig);
-    const db = getDatabase(app);
-    const auth = getAuth(app);
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+    const auth = getAuth(app);
 
-    const MY_PAGE_UID = "PCLsbIRHVoMKwFA1bWmNbbk3x4p1";
-    let userData = {}; 
-    let currentGameUrl = "";
-    let globalSettings = { levelPrice: 100, rankPrice: 1000 };
+    const MY_PAGE_UID = "PCLsbIRHVoMKwFA1bWmNbbk3x4p1";
+    let userData = {}; 
+    let currentGameUrl = "";
+    let globalSettings = { levelPrice: 100, rankPrice: 1000 };
 
-    onValue(ref(db, 'settings'), (snapshot) => {
-        if (snapshot.exists()) globalSettings = snapshot.val();
-    });
+    onValue(ref(db, 'settings'), (snapshot) => {
+        if (snapshot.exists()) globalSettings = snapshot.val();
+    });
 
-    onAuthStateChanged(auth, (user) => {
-        if (!user || user.uid !== MY_PAGE_UID) {
-            window.location.href = "index.html";
-        } else {
-            loadUserData();
-            loadUserGames();
-        }
-    });
+    onAuthStateChanged(auth, (user) => {
+        if (!user || user.uid !== MY_PAGE_UID) {
+            window.location.href = "index.html";
+        } else {
+            loadUserData();
+            loadUserGames();
+        }
+    });
 
-    // --- ՊՐՈՄՈԿՈԴԻ ՖՈՒՆԿՑԻԱՆԵՐ ---
-    window.openPromoModal = () => {
-        document.getElementById('promoModal').style.display = 'flex';
-        document.getElementById('profile-dropdown').style.display = 'none';
-    };
+    // --- ՊՐՈՄՈԿՈԴԻ ՖՈՒՆԿՑԻԱՆԵՐ ---
+    window.openPromoModal = () => {
+        document.getElementById('promoModal').style.display = 'flex';
+        document.getElementById('profile-dropdown').style.display = 'none';
+    };
 
-    window.activatePromo = async () => {
-        // Ուղղված տողը. Վերցնում ենք .value-ն
-        const promoInput = document.getElementById('promo-input');
-        const promoCode = promoInput.value.trim();
-        
-        if (!promoCode) { alert("Введите код!"); return; }
+    window.activatePromo = async () => {
+        // Ուղղված տողը. Վերցնում ենք .value-ն
+        const promoInput = document.getElementById('promo-input');
+        const promoCode = promoInput.value.trim();
+        
+        if (!promoCode) { alert("Введите код!"); return; }
 
-        const promoRef = ref(db, `promocodes/${promoCode}`);
-        const snapshot = await get(promoRef);
+        const promoRef = ref(db, `promocodes/${promoCode}`);
+        const snapshot = await get(promoRef);
 
-        if (snapshot.exists()) {
-            const promoData = snapshot.val();
-            const reward = parseInt(promoData.reward);
-            await update(ref(db, `users/${MY_PAGE_UID}`), {
-                coins: (userData.coins || 0) + reward
-            });
-            alert(`Успешно! Вы получили ${reward} coins!`);
-            promoInput.value = "";
-            closeModals();
-        } else {
-            alert("Неверный промокод!");
-        }
-    };
+        if (snapshot.exists()) {
+            const promoData = snapshot.val();
+            const reward = parseInt(promoData.reward);
+            await update(ref(db, `users/${MY_PAGE_UID}`), {
+                coins: (userData.coins || 0) + reward
+            });
+            alert(`Успешно! Вы получили ${reward} coins!`);
+            promoInput.value = "";
+            closeModals();
+        } else {
+            alert("Неверный промокод!");
+        }
+    };
 
-    // --- ՄՆԱՑԱԾԸ ---
+    // --- ՄՆԱՑԱԾԸ ---
 
-    function getLevelCost(currentLevel) {
-        return currentLevel * (globalSettings.levelPrice || 50);
-    }
+    function getLevelCost(currentLevel) {
+        return currentLevel * (globalSettings.levelPrice || 50);
+    }
 
-    // --- ՈՒՂՂՎԱԾ loadUserData ՖՈՒՆԿՑԻԱՆ ---
-    function loadUserData() {
-        onValue(ref(db, `users/${MY_PAGE_UID}`), (snapshot) => {
-            userData = snapshot.val();
-            if(userData) {
-                document.getElementById('user-coins').innerText = userData.coins || 0;
-                document.getElementById('user-level').innerText = userData.level || 1;
-                
-                // --- ՌԱՆԳԻ ԹԱՐՄԱՑՄԱՆ ՀԱՏՎԱԾԸ ---
-                let currentRank = userData.rank || 1;
-                let rankEl = document.getElementById('user-rank');
-                rankEl.innerText = currentRank;
-                
-                // Մաքրում ենք հին կլասները և դնում նորը ըստ ռանգի
-                rankEl.className = 'rank-box'; 
-                // Եթե ռանգը 9-ից բարձր է, թողնում ենք 9-րդի դիզայնը
-                let rankClassNum = currentRank > 9 ? 9 : currentRank;
-                rankEl.classList.add('rank-' + rankClassNum);
-                // ---------------------------------
+    // --- ՈՒՂՂՎԱԾ loadUserData ՖՈՒՆԿՑԻԱՆ ---
+    function loadUserData() {
+        onValue(ref(db, `users/${MY_PAGE_UID}`), (snapshot) => {
+            userData = snapshot.val();
+            if(userData) {
+                document.getElementById('user-coins').innerText = userData.coins || 0;
+                document.getElementById('user-level').innerText = userData.level || 1;
+                
+                // --- ՌԱՆԳԻ ԹԱՐՄԱՑՄԱՆ ՀԱՏՎԱԾԸ ---
+                let currentRank = userData.rank || 1;
+                let rankEl = document.getElementById('user-rank');
+                rankEl.innerText = currentRank;
+                
+                // Մաքրում ենք հին կլասները և դնում նորը ըստ ռանգի
+                rankEl.className = 'rank-box'; 
+                // Եթե ռանգը 9-ից բարձր է, թողնում ենք 9-րդի դիզայնը
+                let rankClassNum = currentRank > 9 ? 9 : currentRank;
+                rankEl.classList.add('rank-' + rankClassNum);
+                // ---------------------------------
 
-                document.getElementById('user-name').innerText = userData.username || "Player";
-                document.getElementById('user-avatar').src = userData.avatar || "https://via.placeholder.com/50";
-            }
-        });
-    }
+                document.getElementById('user-name').innerText = userData.username || "Player";
+                document.getElementById('user-avatar').src = userData.avatar || "https://via.placeholder.com/50";
+            }
+        });
+    }
 
-    function loadUserGames() {
-        onValue(ref(db, `users/${MY_PAGE_UID}/games`), (snapshot) => {
-            const container = document.getElementById('games-container');
-            container.innerHTML = "";
-            if (!snapshot.exists()) {
-                container.innerHTML = "<h3>Пока нет доступных игр.</h3>";
-                return;
-            }
-            snapshot.forEach((child) => {
-                const game = child.val();
-                const gameId = child.key;
-                let allPassed = true;
-                let tasksObj = game.tasks || {};
-                let hasTasks = Object.keys(tasksObj).length > 0;
-                Object.values(tasksObj).forEach(task => { if(task.status !== 'passed') allPassed = false; });
-                const statusClass = (hasTasks && allPassed) ? 'done' : 'pending';
-                const statusText = (hasTasks && allPassed) ? 'Завершено' : 'Еще осталось';
+    function loadUserGames() {
+        onValue(ref(db, `users/${MY_PAGE_UID}/games`), (snapshot) => {
+            const container = document.getElementById('games-container');
+            container.innerHTML = "";
+            if (!snapshot.exists()) {
+                container.innerHTML = "<h3>Пока нет доступных игр.</h3>";
+                return;
+            }
+            snapshot.forEach((child) => {
+                const game = child.val();
+                const gameId = child.key;
+                let allPassed = true;
+                let tasksObj = game.tasks || {};
+                let hasTasks = Object.keys(tasksObj).length > 0;
+                Object.values(tasksObj).forEach(task => { if(task.status !== 'passed') allPassed = false; });
+                const statusClass = (hasTasks && allPassed) ? 'done' : 'pending';
+                const statusText = (hasTasks && allPassed) ? 'Завершено' : 'Еще осталось';
 
-                container.innerHTML += `
-                    <div class="game-card">
-                        <div class="game-info-wrapper">
-                            <img src="${game.image}" class="game-image">
-                            <div class="game-details">
-                                <h2>${game.name}</h2>
-                                <div class="status ${statusClass}">${statusText}</div>
-                                <button class="btn" onclick="openGameTasks('${gameId}')">Подключиться</button>
-                            </div>
-                        </div>
-                    </div>`;
-            });
-        });
-    }
+                container.innerHTML += `
+                    <div class="game-card">
+                        <div class="game-info-wrapper">
+                            <img src="${game.image}" class="game-image">
+                            <div class="game-details">
+                                <h2>${game.name}</h2>
+                                <div class="status ${statusClass}">${statusText}</div>
+                                <button class="btn" onclick="openGameTasks('${gameId}')">Подключиться</button>
+                            </div>
+                        </div>
+                    </div>`;
+            });
+        });
+    }
 
-    window.openGameTasks = async (gameId) => {
-        const gameSnapshot = await get(ref(db, `users/${MY_PAGE_UID}/games/${gameId}`));
-        const game = gameSnapshot.val();
-        currentGameUrl = game.url;
-        document.getElementById('modal-game-name').innerText = game.name;
-        const taskListDiv = document.getElementById('modal-task-list');
-        taskListDiv.innerHTML = "";
-        if(game.tasks) {
-            Object.values(game.tasks).forEach(task => {
-                const statusClass = task.status === 'passed' ? 'passed' : 'pending';
-                taskListDiv.innerHTML += `
-                    <div class="task-item ${statusClass}">
-                        <div class="task-desc">→ ${task.desc}</div>
-                        <div class="task-reward">
-                            <span>${task.cost}</span>
-                            <div class="coin-icon" style="width:25px;height:25px;font-size:14px;">C</div>
-                        </div>
-                    </div>`;
-            });
-        }
-        document.getElementById('tasksModal').style.display = 'flex';
-    };
+    window.openGameTasks = async (gameId) => {
+        const gameSnapshot = await get(ref(db, `users/${MY_PAGE_UID}/games/${gameId}`));
+        const game = gameSnapshot.val();
+        currentGameUrl = game.url;
+        document.getElementById('modal-game-name').innerText = game.name;
+        const taskListDiv = document.getElementById('modal-task-list');
+        taskListDiv.innerHTML = "";
+        if(game.tasks) {
+            Object.values(game.tasks).forEach(task => {
+                const statusClass = task.status === 'passed' ? 'passed' : 'pending';
+                taskListDiv.innerHTML += `
+                    <div class="task-item ${statusClass}">
+                        <div class="task-desc">→ ${task.desc}</div>
+                        <div class="task-reward">
+                            <span>${task.cost}</span>
+                            <div class="coin-icon" style="width:25px;height:25px;font-size:14px;">C</div>
+                        </div>
+                    </div>`;
+            });
+        }
+        document.getElementById('tasksModal').style.display = 'flex';
+    };
 
-    window.openLevelModal = () => {
-        const cost = getLevelCost(userData.level);
-        document.getElementById('level-cost').innerText = cost;
-        document.getElementById('levelModal').style.display = 'flex';
-    };
+    window.openLevelModal = () => {
+        const cost = getLevelCost(userData.level);
+        document.getElementById('level-cost').innerText = cost;
+        document.getElementById('levelModal').style.display = 'flex';
+    };
 
-    window.upgradeLevel = async () => {
-        const cost = getLevelCost(userData.level);
-        if (userData.coins >= cost) {
-            await update(ref(db, `users/${MY_PAGE_UID}`), {
-                coins: userData.coins - cost,
-                level: userData.level + 1
-            });
-            closeModals();
-        } else { alert("Недостаточно монет!"); }
-    };
+    window.upgradeLevel = async () => {
+        const cost = getLevelCost(userData.level);
+        if (userData.coins >= cost) {
+            await update(ref(db, `users/${MY_PAGE_UID}`), {
+                coins: userData.coins - cost,
+                level: userData.level + 1
+            });
+            closeModals();
+        } else { alert("Недостаточно монет!"); }
+    };
 
-    window.openRankModal = () => {
-        document.getElementById('rank-cost').innerText = globalSettings.rankPrice || 1000;
-        document.getElementById('rankModal').style.display = 'flex';
-    };
+    window.openRankModal = () => {
+        document.getElementById('rank-cost').innerText = globalSettings.rankPrice || 1000;
+        document.getElementById('rankModal').style.display = 'flex';
+    };
 
-    window.upgradeRank = async () => {
-        if (userData.level < 10) { alert("Нужен уровень 10!"); return; }
-        const currentRankCost = globalSettings.rankPrice || 1000;
-        if (userData.coins >= currentRankCost) {
-            await update(ref(db, `users/${MY_PAGE_UID}`), {
-                coins: userData.coins - currentRankCost,
-                level: 1,
-                rank: (userData.rank || 1) + 1
-            });
-            closeModals();
-        } else { alert("Недостаточно монет!"); }
-    };
+    window.upgradeRank = async () => {
+        if (userData.level < 10) { alert("Нужен уровень 10!"); return; }
+        const currentRankCost = globalSettings.rankPrice || 1000;
+        if (userData.coins >= currentRankCost) {
+            await update(ref(db, `users/${MY_PAGE_UID}`), {
+                coins: userData.coins - currentRankCost,
+                level: 1,
+                rank: (userData.rank || 1) + 1
+            });
+            closeModals();
+        } else { alert("Недостаточно монет!"); }
+    };
 
-    window.playGame = () => { if(currentGameUrl) window.open(currentGameUrl, '_blank'); };
-    window.toggleDropdown = () => {
-        const menu = document.getElementById('profile-dropdown');
-        menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
-    };
-    window.closeModals = () => { document.querySelectorAll('.modal-overlay').forEach(el => el.style.display = 'none'); };
-    window.logout = () => { auth.signOut().then(() => window.location.href = "index.html"); };
+    window.playGame = () => { if(currentGameUrl) window.open(currentGameUrl, '_blank'); };
+    window.toggleDropdown = () => {
+        const menu = document.getElementById('profile-dropdown');
+        menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+    };
+    window.closeModals = () => { document.querySelectorAll('.modal-overlay').forEach(el => el.style.display = 'none'); };
+    window.logout = () => { auth.signOut().then(() => window.location.href = "index.html"); };
 
-    window.onclick = (event) => {
-        if (!event.target.closest('.profile')) {
-            const drop = document.getElementById('profile-dropdown');
-            if(drop) drop.style.display = 'none';
-        }
-        if (event.target.classList.contains('modal-overlay')) closeModals();
-    };
+    window.onclick = (event) => {
+        if (!event.target.closest('.profile')) {
+            const drop = document.getElementById('profile-dropdown');
+            if(drop) drop.style.display = 'none';
+        }
+        if (event.target.classList.contains('modal-overlay')) closeModals();
+    };
 </script>
 
 </body>
