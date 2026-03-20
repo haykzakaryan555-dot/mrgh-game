@@ -12,22 +12,24 @@
         .header { display: flex; justify-content: space-between; align-items: center; padding: 15px 0; border-bottom: 1px dotted #ccc; margin-bottom: 20px; }
         .stats { display: flex; align-items: center; gap: 40px; font-size: 18px; }
         
-        /* Ռանգի ՆՈՐ դիզայն (նկարիդ և գույների հիման վրա) */
+        /* Ռանգի ՆՈՐ դիզայն (փոքրացրած, նեղ եզրագծով, էֆեկտներով) */
         .rank-box {
             position: relative;
-            width: 50px;
-            height: 50px;
+            width: 40px; /* Փոքրացված չափս */
+            height: 40px;
             border-radius: 50%;
             display: flex;
             justify-content: center;
             align-items: center;
-            font-size: 24px;
+            font-size: 20px; /* Փոքրացված տեքստ */
             font-weight: bold;
             cursor: pointer;
-            z-index: 1;
-            border: 2px solid #000; /* Նկարի պես սև եզրագիծ */
-            animation: rankPulse 1.5s infinite alternate; /* Շնչող էֆֆեկտ */
+            z-index: 1; /* Շրջանը վերևում */
+            border: 1px solid #000; /* Նեղ եզրագիծ */
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            animation: rankPulse 1.5s infinite alternate;
             transition: 0.3s;
+            overflow: visible; /* Թույլ ենք տալիս, որ ::before-ը երևա դուրս */
         }
 
         /* Սա ռանգի հետևի ուղղանկյունն է */
@@ -35,57 +37,72 @@
             content: '';
             position: absolute;
             top: 50%;
-            left: -25px;
-            right: -25px;
-            height: 24px;
+            left: -15px; /* Փոքրացված երկարություն */
+            right: -15px;
+            height: 18px; /* Փոքրացված բարձրություն */
             transform: translateY(-50%);
-            z-index: -1;
-            border: 2px solid #000;
+            z-index: -1; /* Ուղղանկյունը հետևում */
+            border: 1px solid #000; /* Նեղ եզրագիծ */
         }
 
         /* Մկնիկը պահելիս անիմացիա */
         .rank-box:hover {
-            transform: scale(1.15) rotate(5deg);
+            transform: scale(1.1) rotate(3deg);
         }
 
         /* Շնչող անիմացիայի կոդը */
         @keyframes rankPulse {
-            0% { transform: scale(1); box-shadow: 0 0 5px rgba(0,0,0,0.2); }
-            100% { transform: scale(1.05); box-shadow: 0 0 15px rgba(0,0,0,0.5); }
+            0% { transform: scale(1); box-shadow: 0 0 3px rgba(0,0,0,0.1); }
+            100% { transform: scale(1.03); box-shadow: 0 0 8px rgba(0,0,0,0.3); }
         }
 
-        /* --- ՌԱՆԳԵՐԻ ԳՈՒՅՆԵՐԸ --- */
+        /* --- ՌԱՆԳԵՐԻ ԳՈՒՅՆԵՐԸ ԵՎ ԷՖԵԿՏՆԵՐԸ --- */
+        /* Ավելացված են radial-gradient և inset box-shadow որպես էֆեկտներ */
+        
         /* Ռանգ 1 - Դեղին */
-        .rank-1 { background: #ffd700; color: #000; }
+        .rank-1 { background: radial-gradient(circle, #fffbe0 10%, #ffd700 90%); color: #000; box-shadow: inset 0 0 10px rgba(0,0,0,0.1); }
         .rank-1::before { background: #ffd700; }
         
         /* Ռանգ 2 - Գազարագույն */
-        .rank-2 { background: #ff8c00; color: #fff; text-shadow: 1px 1px 2px #000;}
+        .rank-2 { background: radial-gradient(circle, #fff5e6 10%, #ff8c00 90%); color: #fff; text-shadow: 1px 1px 2px #000; box-shadow: inset 0 0 10px rgba(0,0,0,0.15); }
         .rank-2::before { background: #ff8c00; }
         
         /* Ռանգ 3 - Կապույտ */
-        .rank-3 { background: #1e90ff; color: #fff; text-shadow: 1px 1px 2px #000;}
+        .rank-3 { background: radial-gradient(circle, #e6f7ff 10%, #1e90ff 90%); color: #fff; text-shadow: 1px 1px 2px #000; box-shadow: inset 0 0 10px rgba(0,0,0,0.2); }
         .rank-3::before { background: #1e90ff; }
         
         /* Ռանգ 4 - Բաց մանուշակագույն */
-        .rank-4 { background: #ba55d3; color: #fff; text-shadow: 1px 1px 2px #000;}
+        .rank-4 { background: radial-gradient(circle, #f9f0ff 10%, #ba55d3 90%); color: #fff; text-shadow: 1px 1px 2px #000; box-shadow: inset 0 0 10px rgba(0,0,0,0.2); }
         .rank-4::before { background: #ba55d3; }
         
-        /* Ռանգ 5 - Բորդո և Մոխրագույն (Ուղղանկյունը մոխրագույն, կլորը՝ բորդո) */
-        .rank-5 { background: #800020; color: #fff; text-shadow: 1px 1px 2px #000;}
+        /* Ռանգ 5 - Բորդո և Մոխրագույն */
+        .rank-5 { background: radial-gradient(circle, #f5e6ea 10%, #800020 90%); color: #fff; text-shadow: 1px 1px 2px #000; box-shadow: inset 0 0 10px rgba(0,0,0,0.25); }
         .rank-5::before { background: #808080; }
         
         /* Ռանգ 6 - Մուգ գազարագույն */
-        .rank-6 { background: #d35400; color: #fff; text-shadow: 1px 1px 2px #000;}
+        .rank-6 { background: radial-gradient(circle, #fbeee6 10%, #d35400 90%); color: #fff; text-shadow: 1px 1px 2px #000; box-shadow: inset 0 0 10px rgba(0,0,0,0.25); }
         .rank-6::before { background: #d35400; }
         
         /* Ռանգ 7 - Մուգ մանուշակագույն */
-        .rank-7 { background: #4b0082; color: #fff; text-shadow: 1px 1px 2px #000;}
+        .rank-7 { background: radial-gradient(circle, #eae6f5 10%, #4b0082 90%); color: #fff; text-shadow: 1px 1px 2px #000; box-shadow: inset 0 0 10px rgba(0,0,0,0.3); }
         .rank-7::before { background: #4b0082; }
         
         /* Ռանգ 8 - Մուգ կապույտ */
-        .rank-8 { background: #00008b; color: #fff; text-shadow: 1px 1px 2px #000;}
+        .rank-8 { background: radial-gradient(circle, #e6e6f5 10%, #00008b 90%); color: #fff; text-shadow: 1px 1px 2px #000; box-shadow: inset 0 0 10px rgba(0,0,0,0.3); }
         .rank-8::before { background: #00008b; }
+
+        /* Ռանգ 9 - Սև և Ոսկեգույն (Premium) */
+        .rank-9 { 
+            background: radial-gradient(circle, #333 10%, #111 90%);
+            color: #ffd700;
+            border-color: #ffd700;
+            text-shadow: 0 0 8px #ffd700;
+            box-shadow: inset 0 0 10px rgba(255,215,0,0.2);
+        }
+        .rank-9::before { 
+            background: #333; 
+            border-color: #ffd700;
+        }
 
         /* Լևելի և փողի դիզայն */
         .level-text { cursor: pointer; font-weight: bold; transition: 0.2s; }
@@ -281,6 +298,7 @@
         return currentLevel * (globalSettings.levelPrice || 50);
     }
 
+    // --- ՈՒՂՂՎԱԾ loadUserData ՖՈՒՆԿՑԻԱՆ ---
     function loadUserData() {
         onValue(ref(db, `users/${MY_PAGE_UID}`), (snapshot) => {
             userData = snapshot.val();
@@ -295,8 +313,8 @@
                 
                 // Մաքրում ենք հին կլասները և դնում նորը ըստ ռանգի
                 rankEl.className = 'rank-box'; 
-                // Եթե ռանգը 8-ից բարձր է, թողնում ենք 8-րդի դիզայնը
-                let rankClassNum = currentRank > 8 ? 8 : currentRank;
+                // Եթե ռանգը 9-ից բարձր է, թողնում ենք 9-րդի դիզայնը
+                let rankClassNum = currentRank > 9 ? 9 : currentRank;
                 rankEl.classList.add('rank-' + rankClassNum);
                 // ---------------------------------
 
