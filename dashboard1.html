@@ -12,16 +12,80 @@
         .header { display: flex; justify-content: space-between; align-items: center; padding: 15px 0; border-bottom: 1px dotted #ccc; margin-bottom: 20px; }
         .stats { display: flex; align-items: center; gap: 40px; font-size: 18px; }
         
-        /* Ռանգի դիզայն */
-        .rank-box { 
-            background: #fdf5c9; border: 1px solid #d4c57c; padding: 5px 15px; 
-            font-size: 20px; font-weight: bold; position: relative; cursor: pointer;
-            box-shadow: 2px 2px 0px rgba(0,0,0,0.1); transition: 0.2s;
+        /* Ռանգի ՆՈՐ դիզայն (նկարիդ և գույների հիման վրա) */
+        .rank-box {
+            position: relative;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 24px;
+            font-weight: bold;
+            cursor: pointer;
+            z-index: 1;
+            border: 2px solid #000; /* Նկարի պես սև եզրագիծ */
+            animation: rankPulse 1.5s infinite alternate; /* Շնչող էֆֆեկտ */
+            transition: 0.3s;
         }
-        .rank-box:hover { transform: scale(1.05); }
-        .rank-box::before { 
-            content: ''; position: absolute; top: -1px; left: -1px; border: 5px solid transparent; border-top-color: #fff; border-left-color: #fff;
+
+        /* Սա ռանգի հետևի ուղղանկյունն է */
+        .rank-box::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: -25px;
+            right: -25px;
+            height: 24px;
+            transform: translateY(-50%);
+            z-index: -1;
+            border: 2px solid #000;
         }
+
+        /* Մկնիկը պահելիս անիմացիա */
+        .rank-box:hover {
+            transform: scale(1.15) rotate(5deg);
+        }
+
+        /* Շնչող անիմացիայի կոդը */
+        @keyframes rankPulse {
+            0% { transform: scale(1); box-shadow: 0 0 5px rgba(0,0,0,0.2); }
+            100% { transform: scale(1.05); box-shadow: 0 0 15px rgba(0,0,0,0.5); }
+        }
+
+        /* --- ՌԱՆԳԵՐԻ ԳՈՒՅՆԵՐԸ --- */
+        /* Ռանգ 1 - Դեղին */
+        .rank-1 { background: #ffd700; color: #000; }
+        .rank-1::before { background: #ffd700; }
+        
+        /* Ռանգ 2 - Գազարագույն */
+        .rank-2 { background: #ff8c00; color: #fff; text-shadow: 1px 1px 2px #000;}
+        .rank-2::before { background: #ff8c00; }
+        
+        /* Ռանգ 3 - Կապույտ */
+        .rank-3 { background: #1e90ff; color: #fff; text-shadow: 1px 1px 2px #000;}
+        .rank-3::before { background: #1e90ff; }
+        
+        /* Ռանգ 4 - Բաց մանուշակագույն */
+        .rank-4 { background: #ba55d3; color: #fff; text-shadow: 1px 1px 2px #000;}
+        .rank-4::before { background: #ba55d3; }
+        
+        /* Ռանգ 5 - Բորդո և Մոխրագույն (Ուղղանկյունը մոխրագույն, կլորը՝ բորդո) */
+        .rank-5 { background: #800020; color: #fff; text-shadow: 1px 1px 2px #000;}
+        .rank-5::before { background: #808080; }
+        
+        /* Ռանգ 6 - Մուգ գազարագույն */
+        .rank-6 { background: #d35400; color: #fff; text-shadow: 1px 1px 2px #000;}
+        .rank-6::before { background: #d35400; }
+        
+        /* Ռանգ 7 - Մուգ մանուշակագույն */
+        .rank-7 { background: #4b0082; color: #fff; text-shadow: 1px 1px 2px #000;}
+        .rank-7::before { background: #4b0082; }
+        
+        /* Ռանգ 8 - Մուգ կապույտ */
+        .rank-8 { background: #00008b; color: #fff; text-shadow: 1px 1px 2px #000;}
+        .rank-8::before { background: #00008b; }
 
         /* Լևելի և փողի դիզայն */
         .level-text { cursor: pointer; font-weight: bold; transition: 0.2s; }
@@ -223,7 +287,19 @@
             if(userData) {
                 document.getElementById('user-coins').innerText = userData.coins || 0;
                 document.getElementById('user-level').innerText = userData.level || 1;
-                document.getElementById('user-rank').innerText = userData.rank || 1;
+                
+                // --- ՌԱՆԳԻ ԹԱՐՄԱՑՄԱՆ ՀԱՏՎԱԾԸ ---
+                let currentRank = userData.rank || 1;
+                let rankEl = document.getElementById('user-rank');
+                rankEl.innerText = currentRank;
+                
+                // Մաքրում ենք հին կլասները և դնում նորը ըստ ռանգի
+                rankEl.className = 'rank-box'; 
+                // Եթե ռանգը 8-ից բարձր է, թողնում ենք 8-րդի դիզայնը
+                let rankClassNum = currentRank > 8 ? 8 : currentRank;
+                rankEl.classList.add('rank-' + rankClassNum);
+                // ---------------------------------
+
                 document.getElementById('user-name').innerText = userData.username || "Player";
                 document.getElementById('user-avatar').src = userData.avatar || "https://via.placeholder.com/50";
             }
