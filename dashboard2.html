@@ -12,8 +12,8 @@
         .header { display: flex; justify-content: space-between; align-items: center; padding: 15px 0; border-bottom: 1px dotted #ccc; margin-bottom: 20px; }
         .stats { display: flex; align-items: center; gap: 40px; font-size: 18px; }
         
-        /* --- ՌԱՆԳԻ ՈՒՂՂՎԱԾ ԴԻԶԱՅՆ --- */
-        .rank-box { 
+        /* Ռանգի դիզայն */
+        .rank-box {
             position: relative;
             width: 36px;
             height: 36px;
@@ -25,15 +25,12 @@
             font-weight: bold;
             cursor: pointer;
             border: 1px solid #000;
-            transition: 0.3s;
-            /* Սա թույլ է տալիս շրջանին ծածկել ուղղանկյունը */
-            transform-style: preserve-3d;
+            transform-style: preserve-3d; 
             z-index: 10;
             background-color: inherit;
         }
 
-        /* Հետևի ուղղանկյունը (թևիկները) */
-        .rank-box::before { 
+        .rank-box::before {
             content: '';
             position: absolute;
             top: 50%;
@@ -42,14 +39,15 @@
             height: 14px;
             border: 1px solid #000;
             background-color: inherit;
-            /* Տեղափոխում ենք շրջանի հետևը */
-            transform: translateY(-50%) translateZ(-1px);
+            transform: translateY(-50%) translateZ(-1px); 
             z-index: -1;
         }
 
-        .rank-box:hover { transform: scale(1.1); }
+        .rank-box:hover {
+            transform: scale(1.1) rotate(3deg);
+        }
 
-        /* Ռանգերի գույները և էֆեկտները */
+        /* Ռանգերի գույներ */
         .rank-1 { background: radial-gradient(circle, #fffbe0 10%, #ffd700 90%); color: #000; }
         .rank-2 { background: radial-gradient(circle, #fff5e6 10%, #ff8c00 90%); color: #fff; }
         .rank-3 { background: radial-gradient(circle, #e6f7ff 10%, #1e90ff 90%); color: #fff; }
@@ -62,65 +60,39 @@
             background: radial-gradient(circle, #333 10%, #111 90%);
             color: #ffd700;
             border-color: #ffd700;
-            text-shadow: 0 0 5px #ffd700;
         }
-        .rank-9::before { border-color: #ffd700; }
-        /* -------------------------------- */
 
-        /* Լևելի և փողի դիզայն */
+        /* Մնացած ոճերը */
         .level-text { cursor: pointer; font-weight: bold; transition: 0.2s; }
         .level-text:hover { color: #f39c12; }
-        
         .coin-display { display: flex; align-items: center; gap: 10px; font-size: 18px; }
         .coin-icon { 
             background: #fdf5c9; border: 1px solid #d4c57c; border-radius: 50%; 
             width: 35px; height: 35px; display: flex; justify-content: center; align-items: center; 
             font-weight: bold; font-size: 20px; color: #000;
         }
-
-        /* Օգտատիրոջ պրոֆիլ */
         .profile { display: flex; align-items: center; gap: 15px; cursor: pointer; position: relative; }
         .profile img { width: 50px; height: 50px; border-radius: 5px; object-fit: cover; }
         .profile-name { font-size: 18px; padding-bottom: 5px; border-bottom: 1px solid #000; width: 150px; display: flex; justify-content: space-between; align-items: center;}
-        
-        /* Dropdown Մենյու */
         .dropdown { display: none; position: absolute; top: 60px; right: 0; background: white; border: 1px solid #4285f4; box-shadow: 0 4px 10px rgba(0,0,0,0.1); width: 165px; z-index: 100; }
         .dropdown div { padding: 12px 15px; border-bottom: 1px solid #eee; cursor: pointer; font-size: 16px; }
         .dropdown div:hover { background: #f5f5f5; }
-
-        /* Խաղերի ցուցակ */
         .game-list { display: flex; flex-direction: column; gap: 20px; }
         .game-card { display: flex; align-items: center; justify-content: space-between; border-bottom: 1px dotted #ccc; padding-bottom: 20px; }
         .game-info-wrapper { display: flex; align-items: center; gap: 30px; }
         .game-image { width: 150px; height: 150px; border-radius: 10px; object-fit: cover; }
         .game-details h2 { margin: 0 0 10px 0; font-size: 28px; }
-        
-        /* Ստատուսներ */
         .status { font-size: 14px; margin-bottom: 15px; }
         .status.done { color: #00d200; } 
         .status.pending { color: #ff0000; }
-
-        /* Կոճակներ */
         .btn { background: #333; color: white; border: none; padding: 10px 20px; font-size: 16px; cursor: pointer; border-radius: 3px; font-family: 'Trebuchet MS'; }
-        .btn:hover { background: #444; }
-
-        /* Մոդալ Պատուհաններ */
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center; }
         .modal-content { background: white; padding: 30px; max-width: 600px; width: 100%; border-radius: 5px; position: relative; }
         .close-btn { position: absolute; top: 10px; right: 15px; font-size: 24px; cursor: pointer; color: #888; }
-        
-        /* Պրոմոկոդի ինփութ */
-        .promo-input-style {
-            width: 80%; padding: 10px; margin-bottom: 20px; border: 1px solid #ccc; border-radius: 3px;
-            font-family: 'Trebuchet MS';text-align: center; font-size: 18px;
-        }
-
+        .promo-input-style { width: 80%; padding: 10px; margin-bottom: 20px; border: 1px solid #ccc; border-radius: 3px; text-align: center; font-size: 18px; }
         .task-list { margin-top: 20px; }
         .task-item { display: flex; align-items: center; justify-content: space-between; border-bottom: 1px dotted #ccc; padding: 15px 0; font-size: 18px;}
         .task-item.passed { color: #00d200; }
-        .task-item.pending { color: #000; }
-        .task-desc { display: flex; align-items: center; gap: 10px; }
-        .task-reward { display: flex; align-items: center; gap: 10px; }
     </style>
 </head>
 <body>
@@ -148,7 +120,6 @@
             </div>
         </div>
     </div>
-
     <div class="game-list" id="games-container"></div>
 </div>
 
@@ -207,7 +178,9 @@
     const db = getDatabase(app);
     const auth = getAuth(app);
 
+    // Փոխված UID-ն այստեղ է
     const MY_PAGE_UID = "PCLsbIRHVoMKwFA1bWmNbbk3x4p1";
+    
     let userData = {}; 
     let currentGameUrl = "";
     let globalSettings = { levelPrice: 100, rankPrice: 1000 };
@@ -224,11 +197,6 @@
             loadUserGames();
         }
     });
-
-    window.openPromoModal = () => {
-        document.getElementById('promoModal').style.display = 'flex';
-        document.getElementById('profile-dropdown').style.display = 'none';
-    };
 
     window.activatePromo = async () => {
         const promoInput = document.getElementById('promo-input');
@@ -248,26 +216,18 @@
         } else { alert("Неверный промокод!"); }
     };
 
-    function getLevelCost(currentLevel) { return currentLevel * (globalSettings.levelPrice || 50); }
-
-    // --- ԹԱՐՄԱՑՎԱԾ loadUserData ---
     function loadUserData() {
         onValue(ref(db, `users/${MY_PAGE_UID}`), (snapshot) => {
             userData = snapshot.val();
             if(userData) {
                 document.getElementById('user-coins').innerText = userData.coins || 0;
                 document.getElementById('user-level').innerText = userData.level || 1;
-                
-                // Ռանգի էլեմենտի թարմացում
-                const rankEl = document.getElementById('user-rank');
-                const currentRank = userData.rank || 1;
+                let currentRank = userData.rank || 1;
+                let rankEl = document.getElementById('user-rank');
                 rankEl.innerText = currentRank;
-                
-                // Կլասների թարմացում գույների համար
-                rankEl.className = 'rank-box';
-                const rankClassNum = currentRank > 9 ? 9 : currentRank;
+                rankEl.className = 'rank-box'; 
+                let rankClassNum = currentRank > 9 ? 9 : currentRank;
                 rankEl.classList.add('rank-' + rankClassNum);
-
                 document.getElementById('user-name').innerText = userData.username || "Player";
                 document.getElementById('user-avatar').src = userData.avatar || "https://via.placeholder.com/50";
             }
@@ -287,10 +247,9 @@
                 const gameId = child.key;
                 let allPassed = true;
                 let tasksObj = game.tasks || {};
-                let hasTasks = Object.keys(tasksObj).length > 0;
                 Object.values(tasksObj).forEach(task => { if(task.status !== 'passed') allPassed = false; });
-                const statusClass = (hasTasks && allPassed) ? 'done' : 'pending';
-                const statusText = (hasTasks && allPassed) ? 'Завершено' : 'Еще осталось';
+                const statusClass = (Object.keys(tasksObj).length > 0 && allPassed) ? 'done' : 'pending';
+                const statusText = statusClass === 'done' ? 'Завершено' : 'Еще осталось';
 
                 container.innerHTML += `
                     <div class="game-card">
@@ -320,10 +279,7 @@
                 taskListDiv.innerHTML += `
                     <div class="task-item ${statusClass}">
                         <div class="task-desc">→ ${task.desc}</div>
-                        <div class="task-reward">
-                            <span>${task.cost}</span>
-                            <div class="coin-icon" style="width:25px;height:25px;font-size:14px;">C</div>
-                        </div>
+                        <div class="task-reward"><span>${task.cost}</span> <div class="coin-icon" style="width:25px;height:25px;font-size:14px;">C</div></div>
                     </div>`;
             });
         }
@@ -331,13 +287,13 @@
     };
 
     window.openLevelModal = () => {
-        const cost = getLevelCost(userData.level);
+        const cost = userData.level * (globalSettings.levelPrice || 50);
         document.getElementById('level-cost').innerText = cost;
         document.getElementById('levelModal').style.display = 'flex';
     };
 
     window.upgradeLevel = async () => {
-        const cost = getLevelCost(userData.level);
+        const cost = userData.level * (globalSettings.levelPrice || 50);
         if (userData.coins >= cost) {
             await update(ref(db, `users/${MY_PAGE_UID}`), {
                 coins: userData.coins - cost,
@@ -354,10 +310,10 @@
 
     window.upgradeRank = async () => {
         if (userData.level < 10) { alert("Нужен уровень 10!"); return; }
-        const currentRankCost = globalSettings.rankPrice || 1000;
-        if (userData.coins >= currentRankCost) {
+        const rankCost = globalSettings.rankPrice || 1000;
+        if (userData.coins >= rankCost) {
             await update(ref(db, `users/${MY_PAGE_UID}`), {
-                coins: userData.coins - currentRankCost,
+                coins: userData.coins - rankCost,
                 level: 1,
                 rank: (userData.rank || 1) + 1
             });
@@ -372,6 +328,10 @@
     };
     window.closeModals = () => { document.querySelectorAll('.modal-overlay').forEach(el => el.style.display = 'none'); };
     window.logout = () => { auth.signOut().then(() => window.location.href = "index.html"); };
+    window.openPromoModal = () => { 
+        document.getElementById('promoModal').style.display = 'flex'; 
+        document.getElementById('profile-dropdown').style.display = 'none';
+    };
 
     window.onclick = (event) => {
         if (!event.target.closest('.profile')) {
