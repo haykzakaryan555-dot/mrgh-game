@@ -5,164 +5,305 @@
     <title>Game Dashboard</title>
     <style>
         /* Ընդհանուր դիզայն */
-        body { font-family: 'Trebuchet MS', sans-serif; background: #ffffff; margin: 0; padding: 0; color: #000; }
-        .container { max-width: 900px; margin: 0 auto; padding: 20px; }
+        body {
+            font-family: 'Trebuchet MS', sans-serif;
+            background: #ffffff;
+            margin: 0;
+            padding: 0;
+            color: #000;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+        }
 
         /* Վերևի պանել (Header) */
-        .header { display: flex; justify-content: space-between; align-items: center; padding: 15px 0; border-bottom: 1px dotted #ccc; margin-bottom: 20px; }
-        .stats { display: flex; align-items: center; gap: 40px; font-size: 18px; }
-        
-        /* Ռանգի ՆՈՐ դիզայն (փոքրացրած, նեղ եզրագծով, էֆեկտներով) */
-        /* Ռանգի դիզայն */
-/* ՇՐՋԱՆԸ (Parent) */
-.rank-box {
-    position: relative;
-    width: 36px;  /* Փոքրացրած չափս */
-    height: 36px;
-    margin-left: 12px;
-    border-radius: 50%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    font-size: 18px;
-    font-weight: bold;
-    cursor: pointer;
-    border: 1px solid #000;
-    
-    /* ԱՅՍ 3 ՏՈՂՆ ԵՆ ԼՈՒԾՈՒՄ ՀԱՐՑԸ */
-    transform-style: preserve-3d; 
-    z-index: 10;
-    background-color: inherit; /* Վերցնում է ռանգի գույնը */
-}
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 0;
+            border-bottom: 1px dotted #ccc;
+            margin-bottom: 20px;
+        }
 
-/* ՈՒՂՂԱՆԿՅՈՒՆԸ (Pseudo-element) */
-.rank-box::before {
-    content: '';
-    position: absolute;
-    top: 50%;
-    left: -12px;
-    right: -12px;
-    height: 14px;
-    border: 1px solid #000;
-    background-color: inherit; /* Վերցնում է նույն գույնը */
-    
-    /* ՍԱ ՈՒՂՂԱՆԿՅՈՒՆԸ ՏԱՆՈՒՄ Է ՇՐՋԱՆԻ ՀԵՏԵՎԸ */
-    transform: translateY(-50%) translateZ(-1px); 
-    z-index: -1;
-}
-        /* Մկնիկը պահելիս անիմացիա */
+        .stats {
+            display: flex;
+            align-items: center;
+            gap: 40px;
+            font-size: 18px;
+        }
+        
+        /* Ռանգի ՆՈՐ դիզայն */
+        .rank-box {
+            position: relative;
+            width: 36px;
+            height: 36px;
+            margin-left: 12px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            border: 1px solid #000;
+            transform-style: preserve-3d; 
+            z-index: 10;
+            background-color: inherit;
+        }
+
+        .rank-box::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: -12px;
+            right: -12px;
+            height: 14px;
+            border: 1px solid #000;
+            background-color: inherit;
+            transform: translateY(-50%) translateZ(-1px); 
+            z-index: -1;
+        }
+
         .rank-box:hover {
             transform: scale(1.1) rotate(3deg);
         }
 
-        /* Շնչող անիմացիայի կոդը */
-        @keyframes rankPulse {
-            0% { transform: scale(1); box-shadow: 0 0 3px rgba(0,0,0,0.1); }
-            100% { transform: scale(1.03); box-shadow: 0 0 8px rgba(0,0,0,0.3); }
-        }
-
-        /* --- ՌԱՆԳԵՐԻ ԳՈՒՅՆԵՐԸ ԵՎ ԷՖԵԿՏՆԵՐԸ --- */
-        /* Ավելացված են radial-gradient և inset box-shadow որպես էֆեկտներ */
-        
-        /* Ռանգ 1 - Դեղին */
-        .rank-1 { background: radial-gradient(circle, #fffbe0 10%, #ffd700 90%); color: #000; box-shadow: inset 0 0 10px rgba(0,0,0,0.1); }
+        /* Ռանգերի գույներ */
+        .rank-1 { background: radial-gradient(circle, #fffbe0 10%, #ffd700 90%); color: #000; }
         .rank-1::before { background: #ffd700; }
-        
-        /* Ռանգ 2 - Գազարագույն */
-        .rank-2 { background: radial-gradient(circle, #fff5e6 10%, #ff8c00 90%); color: #fff; text-shadow: 1px 1px 2px #000; box-shadow: inset 0 0 10px rgba(0,0,0,0.15); }
+
+        .rank-2 { background: radial-gradient(circle, #fff5e6 10%, #ff8c00 90%); color: #fff; }
         .rank-2::before { background: #ff8c00; }
-        
-        /* Ռանգ 3 - Կապույտ */
-        .rank-3 { background: radial-gradient(circle, #e6f7ff 10%, #1e90ff 90%); color: #fff; text-shadow: 1px 1px 2px #000; box-shadow: inset 0 0 10px rgba(0,0,0,0.2); }
+
+        .rank-3 { background: radial-gradient(circle, #e6f7ff 10%, #1e90ff 90%); color: #fff; }
         .rank-3::before { background: #1e90ff; }
-        
-        /* Ռանգ 4 - Բաց մանուշակագույն */
-        .rank-4 { background: radial-gradient(circle, #f9f0ff 10%, #ba55d3 90%); color: #fff; text-shadow: 1px 1px 2px #000; box-shadow: inset 0 0 10px rgba(0,0,0,0.2); }
+
+        .rank-4 { background: radial-gradient(circle, #f9f0ff 10%, #ba55d3 90%); color: #fff; }
         .rank-4::before { background: #ba55d3; }
-        
-        /* Ռանգ 5 - Բորդո և Մոխրագույն */
-        .rank-5 { background: radial-gradient(circle, #f5e6ea 10%, #800020 90%); color: #fff; text-shadow: 1px 1px 2px #000; box-shadow: inset 0 0 10px rgba(0,0,0,0.25); }
+
+        .rank-5 { background: radial-gradient(circle, #f5e6ea 10%, #800020 90%); color: #fff; }
         .rank-5::before { background: #808080; }
-        
-        /* Ռանգ 6 - Մուգ գազարագույն */
-        .rank-6 { background: radial-gradient(circle, #fbeee6 10%, #d35400 90%); color: #fff; text-shadow: 1px 1px 2px #000; box-shadow: inset 0 0 10px rgba(0,0,0,0.25); }
+
+        .rank-6 { background: radial-gradient(circle, #fbeee6 10%, #d35400 90%); color: #fff; }
         .rank-6::before { background: #d35400; }
-        
-        /* Ռանգ 7 - Մուգ մանուշակագույն */
-        .rank-7 { background: radial-gradient(circle, #eae6f5 10%, #4b0082 90%); color: #fff; text-shadow: 1px 1px 2px #000; box-shadow: inset 0 0 10px rgba(0,0,0,0.3); }
+
+        .rank-7 { background: radial-gradient(circle, #eae6f5 10%, #4b0082 90%); color: #fff; }
         .rank-7::before { background: #4b0082; }
-        
-        /* Ռանգ 8 - Մուգ կապույտ */
-        .rank-8 { background: radial-gradient(circle, #e6e6f5 10%, #00008b 90%); color: #fff; text-shadow: 1px 1px 2px #000; box-shadow: inset 0 0 10px rgba(0,0,0,0.3); }
+
+        .rank-8 { background: radial-gradient(circle, #e6e6f5 10%, #00008b 90%); color: #fff; }
         .rank-8::before { background: #00008b; }
 
-        /* Ռանգ 9 - Սև և Ոսկեգույն (Premium) */
         .rank-9 { 
-            background: radial-gradient(circle, #333 10%, #111 90%);
-            color: #ffd700;
-            border-color: #ffd700;
-            text-shadow: 0 0 8px #ffd700;
-            box-shadow: inset 0 0 10px rgba(255,215,0,0.2);
-        }
-        .rank-9::before { 
-            background: #333; 
+            background: radial-gradient(circle, #333 10%, #111 90%); 
+            color: #ffd700; 
             border-color: #ffd700;
         }
+        .rank-9::before { background: #333; border-color: #ffd700; }
 
-        /* Լևելի և փողի դիզայն */
-        .level-text { cursor: pointer; font-weight: bold; transition: 0.2s; }
-        .level-text:hover { color: #f39c12; }
-        
-        .coin-display { display: flex; align-items: center; gap: 10px; font-size: 18px; }
-        .coin-icon { 
-            background: #fdf5c9; border: 1px solid #d4c57c; border-radius: 50%; 
-            width: 35px; height: 35px; display: flex; justify-content: center; align-items: center; 
-            font-weight: bold; font-size: 20px; color: #000;
+        .level-text {
+            cursor: pointer;
+            font-weight: bold;
+            transition: 0.2s;
         }
 
-        /* Օգտատիրոջ պրոֆիլ */
-        .profile { display: flex; align-items: center; gap: 15px; cursor: pointer; position: relative; }
-        .profile img { width: 50px; height: 50px; border-radius: 5px; object-fit: cover; }
-        .profile-name { font-size: 18px; padding-bottom: 5px; border-bottom: 1px solid #000; width: 150px; display: flex; justify-content: space-between; align-items: center;}
-        
+        .level-text:hover {
+            color: #f39c12;
+        }
+
+        .coin-display {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 18px;
+        }
+
+        .coin-icon {
+            background: #fdf5c9;
+            border: 1px solid #d4c57c;
+            border-radius: 50%;
+            width: 35px;
+            height: 35px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
+            font-size: 20px;
+            color: #000;
+        }
+
+        /* Պրոֆիլի հատված */
+        .profile {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .profile img {
+            width: 50px;
+            height: 50px;
+            border-radius: 5px;
+            object-fit: cover;
+        }
+
+        .profile-name {
+            font-size: 18px;
+            padding-bottom: 5px;
+            border-bottom: 1px solid #000;
+            width: 150px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
         /* Dropdown Մենյու */
-        .dropdown { display: none; position: absolute; top: 60px; right: 0; background: white; border: 1px solid #4285f4; box-shadow: 0 4px 10px rgba(0,0,0,0.1); width: 165px; z-index: 100; }
-        .dropdown div { padding: 12px 15px; border-bottom: 1px solid #eee; cursor: pointer; font-size: 16px; }
-        .dropdown div:hover { background: #f5f5f5; }
+        .dropdown {
+            display: none;
+            position: absolute;
+            top: 60px;
+            right: 0;
+            background: white;
+            border: 1px solid #4285f4;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            width: 165px;
+            z-index: 100;
+        }
+
+        .dropdown div {
+            padding: 12px 15px;
+            border-bottom: 1px solid #eee;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        .dropdown div:hover {
+            background: #f5f5f5;
+        }
 
         /* Խաղերի ցուցակ */
-        .game-list { display: flex; flex-direction: column; gap: 20px; }
-        .game-card { display: flex; align-items: center; justify-content: space-between; border-bottom: 1px dotted #ccc; padding-bottom: 20px; }
-        .game-info-wrapper { display: flex; align-items: center; gap: 30px; }
-        .game-image { width: 150px; height: 150px; border-radius: 10px; object-fit: cover; }
-        .game-details h2 { margin: 0 0 10px 0; font-size: 28px; }
-        
-        /* Ստատուսներ */
-        .status { font-size: 14px; margin-bottom: 15px; }
+        .game-list {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .game-card {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px dotted #ccc;
+            padding-bottom: 20px;
+        }
+
+        .game-info-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 30px;
+        }
+
+        .game-image {
+            width: 150px;
+            height: 150px;
+            border-radius: 10px;
+            object-fit: cover;
+        }
+
+        .game-details h2 {
+            margin: 0 0 10px 0;
+            font-size: 28px;
+        }
+
+        .status {
+            font-size: 14px;
+            margin-bottom: 15px;
+        }
+
         .status.done { color: #00d200; } 
         .status.pending { color: #ff0000; }
 
-        /* Կոճակներ */
-        .btn { background: #333; color: white; border: none; padding: 10px 20px; font-size: 16px; cursor: pointer; border-radius: 3px; font-family: 'Trebuchet MS'; }
-        .btn:hover { background: #444; }
-
-        /* Մոդալ Պատուհաններ */
-        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center; }
-        .modal-content { background: white; padding: 30px; max-width: 600px; width: 100%; border-radius: 5px; position: relative; }
-        .close-btn { position: absolute; top: 10px; right: 15px; font-size: 24px; cursor: pointer; color: #888; }
-        
-        /* Պրոմոկոդի ինփութ */
-        .promo-input-style {
-            width: 80%; padding: 10px; margin-bottom: 20px; border: 1px solid #ccc; border-radius: 3px;
-            font-family: 'Trebuchet MS';text-align: center; font-size: 18px;
+        .btn {
+            background: #333;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            border-radius: 3px;
+            font-family: 'Trebuchet MS';
         }
 
-        .task-list { margin-top: 20px; }
-        .task-item { display: flex; align-items: center; justify-content: space-between; border-bottom: 1px dotted #ccc; padding: 15px 0; font-size: 18px;}
+        .btn:hover {
+            background: #444;
+        }
+
+        /* Մոդալ պատուհաններ */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 30px;
+            max-width: 600px;
+            width: 100%;
+            border-radius: 5px;
+            position: relative;
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            font-size: 24px;
+            cursor: pointer;
+            color: #888;
+        }
+
+        .promo-input-style {
+            width: 80%;
+            padding: 10px;
+            margin-bottom: 20px;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+            font-family: 'Trebuchet MS';
+            text-align: center;
+            font-size: 18px;
+        }
+
+        /* Առաջադրանքների ցուցակ */
+        .task-list {
+            margin-top: 20px;
+        }
+
+        .task-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px dotted #ccc;
+            padding: 15px 0;
+            font-size: 18px;
+        }
+
         .task-item.passed { color: #00d200; }
         .task-item.pending { color: #000; }
+
         .task-desc { display: flex; align-items: center; gap: 10px; }
         .task-reward { display: flex; align-items: center; gap: 10px; }
+
     </style>
 </head>
 <body>
@@ -191,7 +332,8 @@
         </div>
     </div>
 
-    <div class="game-list" id="games-container"></div>
+    <div class="game-list" id="games-container">
+        </div>
 </div>
 
 <div class="modal-overlay" id="promoModal">
@@ -227,7 +369,7 @@
     <div class="modal-content" style="text-align: center;">
         <span class="close-btn" onclick="closeModals()">&times;</span>
         <h2>Повышение Ранга</h2>
-        <p>Для получения следующего ранга нужен <b>Уровень 10</b> и <b id="rank-cost">0</b> coins.</p>
+        <p>Для получения следующего ранга нужен <b id="rank-required-level">Уровень 10</b> и <b id="rank-cost">0</b> coins.</p>
         <button class="btn" onclick="upgradeRank()" style="background: #f39c12; color: #000;">Повысить ранг</button>
     </div>
 </div>
@@ -252,13 +394,6 @@
     const MY_PAGE_UID = "PCLsbIRHVoMKwFA1bWmNbbk3x4p1";
     let userData = {}; 
     let currentGameUrl = "";
-    let globalSettings = { levelPrice: 100, rankPrice: 1000 };
-
-    onValue(ref(db, 'settings'), (snapshot) => {
-
-        if (snapshot.exists()) globalSettings = snapshot.val();
-
-    });
 
     onAuthStateChanged(auth, (user) => {
         if (!user || user.uid !== MY_PAGE_UID) {
@@ -269,7 +404,6 @@
         }
     });
 
-    // --- ՊՐՈՄՈԿՈԴԻ ՖՈՒՆԿՑԻԱՆԵՐ ---
     window.openPromoModal = () => {
         document.getElementById('promoModal').style.display = 'flex';
         document.getElementById('profile-dropdown').style.display = 'none';
@@ -278,50 +412,32 @@
     window.activatePromo = async () => {
         const promoInput = document.getElementById('promo-input');
         const promoCode = promoInput.value.trim();
-        
         if (!promoCode) { alert("Введите код!"); return; }
 
-        // 1. Ստուգում ենք՝ կա՞ նման պրոմոկոդ ընդհանրապես
         const promoRef = ref(db, `promocodes/${promoCode}`);
         const promoSnapshot = await get(promoRef);
 
         if (promoSnapshot.exists()) {
             const promoData = promoSnapshot.val();
-            const promoId = promoData.promoId || "legacy"; // Վերցնում ենք ID-ն (կամ legacy, եթե հին է)
-
-            // 2. Ստուգում ենք՝ արդյոք այս user-ը արդեն օգտագործել է ՀԵՆՑ ԱՅՍ ID-ով կոդը
+            const promoId = promoData.promoId || "legacy";
             const userPromoRef = ref(db, `users/${MY_PAGE_UID}/usedPromos/${promoCode}`);
             const userPromoSnapshot = await get(userPromoRef);
 
             if (userPromoSnapshot.exists() && userPromoSnapshot.val() === promoId) {
                 alert("Вы уже использовали этот промокод!");
             } else {
-                // 3. Եթե չի օգտագործել, ավելացնում ենք coins-ը և նշում ենք, որ օգտագործվեց
                 const reward = parseInt(promoData.reward);
-                
-                // Թարմացնում ենք և՛ փողերը, և՛ usedPromos ցուցակը
                 const updates = {};
                 updates[`users/${MY_PAGE_UID}/coins`] = (userData.coins || 0) + reward;
                 updates[`users/${MY_PAGE_UID}/usedPromos/${promoCode}`] = promoId;
-
                 await update(ref(db), updates);
-
                 alert(`Успешно! Вы получили ${reward} coins!`);
                 promoInput.value = "";
                 closeModals();
             }
-        } else {
-            alert("Неверный промокод!");
-        }
+        } else { alert("Неверный промокод!"); }
     };
 
-    // --- ՄՆԱՑԱԾԸ ---
-
-    function getLevelCost(currentLevel) {
-        return currentLevel * (globalSettings.levelPrice || 50);
-    }
-
-    // --- ՈՒՂՂՎԱԾ loadUserData ՖՈՒՆԿՑԻԱՆ ---
     function loadUserData() {
         onValue(ref(db, `users/${MY_PAGE_UID}`), (snapshot) => {
             userData = snapshot.val();
@@ -329,17 +445,12 @@
                 document.getElementById('user-coins').innerText = userData.coins || 0;
                 document.getElementById('user-level').innerText = userData.level || 1;
                 
-                // --- ՌԱՆԳԻ ԹԱՐՄԱՑՄԱՆ ՀԱՏՎԱԾԸ ---
                 let currentRank = userData.rank || 1;
                 let rankEl = document.getElementById('user-rank');
                 rankEl.innerText = currentRank;
-                
-                // Մաքրում ենք հին կլասները և դնում նորը ըստ ռանգի
                 rankEl.className = 'rank-box'; 
-                // Եթե ռանգը 9-ից բարձր է, թողնում ենք 9-րդի դիզայնը
                 let rankClassNum = currentRank > 9 ? 9 : currentRank;
                 rankEl.classList.add('rank-' + rankClassNum);
-                // ---------------------------------
 
                 document.getElementById('user-name').innerText = userData.username || "Player";
                 document.getElementById('user-avatar').src = userData.avatar || "https://via.placeholder.com/50";
@@ -357,13 +468,11 @@
             }
             snapshot.forEach((child) => {
                 const game = child.val();
-                const gameId = child.key;
-                let allPassed = true;
-                let tasksObj = game.tasks || {};
-                let hasTasks = Object.keys(tasksObj).length > 0;
-                Object.values(tasksObj).forEach(task => { if(task.status !== 'passed') allPassed = false; });
-                const statusClass = (hasTasks && allPassed) ? 'done' : 'pending';
-                const statusText = (hasTasks && allPassed) ? 'Завершено' : 'Еще осталось';
+                
+                // Սա այն հատվածն է, որը ես բաց էի թողել.
+                // Ստուգում ենք ստատուսը և որոշում տեքստն ու գույնը
+                let statusText = game.status === 'done' ? 'Завершено' : 'Еще осталось';
+                let statusClass = game.status === 'done' ? 'done' : 'pending';
 
                 container.innerHTML += `
                     <div class="game-card">
@@ -372,7 +481,7 @@
                             <div class="game-details">
                                 <h2>${game.name}</h2>
                                 <div class="status ${statusClass}">${statusText}</div>
-                                <button class="btn" onclick="openGameTasks('${gameId}')">Подключиться</button>
+                                <button class="btn" onclick="openGameTasks('${child.key}')">Подключиться</button>
                             </div>
                         </div>
                     </div>`;
@@ -393,10 +502,7 @@
                 taskListDiv.innerHTML += `
                     <div class="task-item ${statusClass}">
                         <div class="task-desc">→ ${task.desc}</div>
-                        <div class="task-reward">
-                            <span>${task.cost}</span>
-                            <div class="coin-icon" style="width:25px;height:25px;font-size:14px;">C</div>
-                        </div>
+                        <div class="task-reward"><span>${task.cost}</span><div class="coin-icon" style="width:25px;height:25px;font-size:14px;">C</div></div>
                     </div>`;
             });
         }
@@ -404,8 +510,7 @@
     };
 
     window.openLevelModal = () => {
-        const cost = getLevelCost(userData.level);
-        document.getElementById('level-cost').innerText = cost;
+        document.getElementById('level-cost').innerText = getLevelCost(userData.level);
         document.getElementById('levelModal').style.display = 'flex';
     };
 
@@ -414,29 +519,54 @@
         if (userData.coins >= cost) {
             await update(ref(db, `users/${MY_PAGE_UID}`), {
                 coins: userData.coins - cost,
-                level: userData.level + 1
+                level: (userData.level || 1) + 1
             });
             closeModals();
         } else { alert("Недостаточно монет!"); }
     };
 
-    window.openRankModal = () => {
-        document.getElementById('rank-cost').innerText = globalSettings.rankPrice || 1000;
-        document.getElementById('rankModal').style.display = 'flex';
-    };
+   window.openRankModal = () => {
+    // Հաշվում ենք, թե քանի լևել է պետք հաջորդ ռանգի համար
+    const requiredLevel = (userData.rank || 1) * 10;
+    
+    // Թարմացնում ենք տեքստը մոդալ պատուհանի մեջ
+    document.getElementById('rank-required-level').innerText = `Уровень ${requiredLevel}`;
+    
+    // Գինը թարմացնելը (արդեն ունեիր)
+    document.getElementById('rank-cost').innerText = userData.rankPrice || 1000;
+    
+    document.getElementById('rankModal').style.display = 'flex';
+};
 
     window.upgradeRank = async () => {
-        if (userData.level < 10) { alert("Нужен уровень 10!"); return; }
-        const currentRankCost = globalSettings.rankPrice || 1000;
-        if (userData.coins >= currentRankCost) {
-            await update(ref(db, `users/${MY_PAGE_UID}`), {
-                coins: userData.coins - currentRankCost,
-                level: userData.level + 1,
-                rank: (userData.rank || 1) + 1
-            });
-            closeModals();
-        } else { alert("Недостаточно монет!"); }
-    };
+    // Հաշվարկում ենք անհրաժեշտ լևելը ըստ ընթացիկ ռանգի
+    // Եթե ռանգը 1 է, պետք է 10 լևել
+    // Եթե ռանգը 2 է, պետք է 20 լևել և այլն
+    const requiredLevel = (userData.rank || 1) * 10;
+
+    if (userData.level < requiredLevel) { 
+        alert(`Для получения следующего ранга нужен Уровень ${requiredLevel}!`); 
+        return; 
+    }
+
+    const currentRankCost = userData.rankPrice || 1000;
+
+    if (userData.coins >= currentRankCost) {
+        await update(ref(db, `users/${MY_PAGE_UID}`), {
+            coins: userData.coins - currentRankCost,
+            rank: (userData.rank || 1) + 1,
+            level: userData.level // Լևելը թողնում ենք նույնը կամ կարող ես ավելացնել +1
+        });
+        closeModals();
+    } else { 
+        alert("Недостаточно монет!"); 
+    }
+};
+
+    function getLevelCost(currentLevel) {
+        const price = userData.levelPrice || 100;
+        return currentLevel * price;
+    }
 
     window.playGame = () => { if(currentGameUrl) window.open(currentGameUrl, '_blank'); };
     window.toggleDropdown = () => {
@@ -454,6 +584,5 @@
         if (event.target.classList.contains('modal-overlay')) closeModals();
     };
 </script>
-
 </body>
 </html>
