@@ -369,7 +369,7 @@
     <div class="modal-content" style="text-align: center;">
         <span class="close-btn" onclick="closeModals()">&times;</span>
         <h2>Повышение Ранга</h2>
-        <p>Для получения следующего ранга нужен <b>Уровень 10</b> и <b id="rank-cost">0</b> coins.</p>
+        <p>Для получения следующего ранга нужен <b id="rank-required-level">Уровень 10</b> и <b id="rank-cost">0</b> coins.</p>
         <button class="btn" onclick="upgradeRank()" style="background: #f39c12; color: #000;">Повысить ранг</button>
     </div>
 </div>
@@ -518,10 +518,18 @@
         } else { alert("Недостаточно монет!"); }
     };
 
-    window.openRankModal = () => {
-        document.getElementById('rank-cost').innerText = userData.rankPrice || 1000;
-        document.getElementById('rankModal').style.display = 'flex';
-    };
+   window.openRankModal = () => {
+    // Հաշվում ենք, թե քանի լևել է պետք հաջորդ ռանգի համար
+    const requiredLevel = (userData.rank || 1) * 10;
+    
+    // Թարմացնում ենք տեքստը մոդալ պատուհանի մեջ
+    document.getElementById('rank-required-level').innerText = `Уровень ${requiredLevel}`;
+    
+    // Գինը թարմացնելը (արդեն ունեիր)
+    document.getElementById('rank-cost').innerText = userData.rankPrice || 1000;
+    
+    document.getElementById('rankModal').style.display = 'flex';
+};
 
     window.upgradeRank = async () => {
     // Հաշվարկում ենք անհրաժեշտ լևելը ըստ ընթացիկ ռանգի
