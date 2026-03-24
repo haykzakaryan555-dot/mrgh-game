@@ -254,29 +254,11 @@
     let currentGameUrl = "";
     let globalSettings = { levelPrice: 100, rankPrice: 1000 };
 
-    // Level-ի գնի հաշվարկը
-function getLevelCost(currentLevel) {
-    // userData-ն այն փոփոխականն է, որտեղ պահում ես snapshot.val()-ը օգտատիրոջ համար
-    // Եթե բազայում դեռ չկա գինը, դնում ենք default 100
-    const pricePerLevel = userData.levelPrice || 100; 
-    return currentLevel * pricePerLevel;
-}
+    onValue(ref(db, 'settings'), (snapshot) => {
 
-// Rank-ի բարձրացումը
-window.upgradeRank = async () => {
-    // Վերցնում ենք rankPrice-ը հենց userData-ի միջից
-    const currentRankCost = userData.rankPrice || 1000;
+        if (snapshot.exists()) globalSettings = snapshot.val();
 
-    if (userData.coins >= currentRankCost) {
-        await update(ref(db, `users/${MY_PAGE_UID}`), {
-            coins: userData.coins - currentRankCost,
-            rank: (userData.rank || 1) + 1,
-            level: userData.level + 1 // Սա քո նախորդ configuration task-ի շարունակությունն է
-        });
-    } else {
-        alert("Недостаточно монет!");
-    }
-};
+    });
 
     onAuthStateChanged(auth, (user) => {
         if (!user || user.uid !== MY_PAGE_UID) {
