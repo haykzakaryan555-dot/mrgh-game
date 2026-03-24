@@ -391,16 +391,18 @@
     const db = getDatabase(app);
     const auth = getAuth(app);
 
-    const MY_PAGE_UID = "PCLsbIRHVoMKwFA1bWmNbbk3x4p1";
+    const MY_PAGE_UID = "SOHqHyiFeEVu2lp2uwBAq6ZQ06N2";
     let userData = {}; 
     let currentGameUrl = "";
 
     onAuthStateChanged(auth, (user) => {
-        if (!user || user.uid !== MY_PAGE_UID) {
-            window.location.href = "index.html";
+        if (user) {
+            // Վերցնում ենք հենց էն մարդու UID-ն, ով մուտք է գործել
+            const uid = user.uid; 
+            loadUserData(uid);
+            loadUserGames(uid);
         } else {
-            loadUserData();
-            loadUserGames();
+            window.location.href = "index.html";
         }
     });
 
@@ -463,16 +465,31 @@
             const container = document.getElementById('games-container');
             container.innerHTML = "";
             if (!snapshot.exists()) {
-                container.innerHTML = "<h3>Пока нет доступных игр.</h3>";
+                container.innerHTML = "<h3>Игры не найдены в базе.</h3>";
                 return;
             }
             snapshot.forEach((child) => {
                 const game = child.val();
                 
-                // Ստուգում ենք 'passed' ստատուսը, քանի որ քո Firebase-ում այդպես է գրված
-                let isDone = game.status === 'passed';
-                let statusText = isDone ? 'Завершено' : 'Еще осталось';
-                let statusClass = isDone ? 'done' : 'pending';
+                // --- ՓՈՓՈԽՎԱԾ ՀԱՏՎԱԾ ---
+                let isFinished = false;
+                
+                // Ստուգում ենք՝ արդյոք խաղն ունի առաջադրանքներ (tasks)
+                if (game.tasks) {
+                    const tasksArray = Object.values(game.tasks);
+                    // every() մեթոդը վերադարձնում է true միայն այն դեպքում, 
+                    // եթե բոլոր task-երի status-ը 'passed' է
+                    if (tasksArray.length > 0) {
+                        isFinished = tasksArray.every(task => task.status === 'passed');
+                    }
+                } else {
+                    // Եթե հանկարծ առաջադրանքներ չկան, նայում ենք ընդհանուր ստատուսին
+                    isFinished = game.status === 'passed';
+                }
+                // -----------------------
+
+                let statusText = isFinished ? 'Завершено' : 'Еще осталось';
+                let statusClass = isFinished ? 'done' : 'pending';
 
                 container.innerHTML += `
                     <div class="game-card">
@@ -488,7 +505,6 @@
             });
         });
     }
-
     window.openGameTasks = async (gameId) => {
         const gameSnapshot = await get(ref(db, `users/${MY_PAGE_UID}/games/${gameId}`));
         const game = gameSnapshot.val();
