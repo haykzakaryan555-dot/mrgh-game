@@ -469,10 +469,10 @@
             snapshot.forEach((child) => {
                 const game = child.val();
                 
-                // Սա այն հատվածն է, որը ես բաց էի թողել.
-                // Ստուգում ենք ստատուսը և որոշում տեքստն ու գույնը
-                let statusText = game.status === 'done' ? 'Завершено' : 'Еще осталось';
-                let statusClass = game.status === 'done' ? 'done' : 'pending';
+                // Ստուգում ենք ստատուսը՝ անկախ մեծատառ-փոքրատառից
+                let gameStatus = (game.status || "").toLowerCase(); 
+                let statusText = gameStatus === 'done' ? 'Завершено' : 'Еще осталось';
+                let statusClass = gameStatus === 'done' ? 'done' : 'pending';
 
                 container.innerHTML += `
                     <div class="game-card">
