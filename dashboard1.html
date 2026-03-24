@@ -468,12 +468,19 @@
             }
             snapshot.forEach((child) => {
                 const game = child.val();
+                
+                // Սա այն հատվածն է, որը ես բաց էի թողել.
+                // Ստուգում ենք ստատուսը և որոշում տեքստն ու գույնը
+                let statusText = game.status === 'done' ? 'Завершено' : 'Еще осталось';
+                let statusClass = game.status === 'done' ? 'done' : 'pending';
+
                 container.innerHTML += `
                     <div class="game-card">
                         <div class="game-info-wrapper">
                             <img src="${game.image}" class="game-image">
                             <div class="game-details">
                                 <h2>${game.name}</h2>
+                                <div class="status ${statusClass}">${statusText}</div>
                                 <button class="btn" onclick="openGameTasks('${child.key}')">Подключиться</button>
                             </div>
                         </div>
