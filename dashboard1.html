@@ -440,8 +440,9 @@
         } else { alert("Неверный промокод!"); }
     };
 
-    function loadUserData() {
-        onValue(ref(db, `users/${MY_PAGE_UID}`), (snapshot) => {
+    // 1. Այս ֆունկցիան պետք է ստանա UID
+    function loadUserData(uid) {
+        onValue(ref(db, `users/${uid}`), (snapshot) => { // MY_PAGE_UID-ն սարքիր uid
             userData = snapshot.val();
             if(userData) {
                 document.getElementById('user-coins').innerText = userData.coins || 0;
@@ -460,18 +461,18 @@
         });
     }
 
+    // 2. Այս ֆունկցիան արդեն ճիշտ է, բայց ստուգիր, որ կանչելուց 'uid' տաս
     function loadUserGames(uid) {
         onValue(ref(db, `users/${uid}/games`), (snapshot) => {
             const container = document.getElementById('games-container');
             container.innerHTML = "";
             if (!snapshot.exists()) {
-                container.innerHTML = "<h3>Игры не найдены в базе.</h3>";
+                container.innerHTML = "<h3>Игры не найдены.</h3>";
                 return;
             }
             snapshot.forEach((child) => {
                 const game = child.val();
-                // ՍԱ ԷՆ ՀԱՏՎԱԾՆ Է, ՈՐԻՑ ԽՆԴԻՐՆ ԱՌԱՋԱՑԵԼ Է
-                let isFinished = game.status === 'passed'; // Փոխել ենք 'passed', որ համընկնի բազայիդ հետ
+                let isFinished = game.status === 'passed'; 
                 let statusText = isFinished ? 'Завершено' : 'Еще осталось';
                 let statusClass = isFinished ? 'done' : 'pending';
 
@@ -490,8 +491,10 @@
         });
     }
 
-    window.openGameTasks = async (gameId) => {
-        const gameSnapshot = await get(ref(db, `users/${MY_PAGE_UID}/games/${gameId}`));
+   window.openGameTasks = async (gameId) => {
+        const user = auth.currentUser; // Վերցնում ենք ընթացիկ օգտատիրոջը
+        if (!user) return;
+        const gameSnapshot = await get(ref(db, `users/${user.uid}/games/${gameId}`));
         const game = gameSnapshot.val();
         currentGameUrl = game.url;
         document.getElementById('modal-game-name').innerText = game.name;
