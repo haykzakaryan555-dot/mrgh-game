@@ -440,9 +440,8 @@
         } else { alert("Неверный промокод!"); }
     };
 
-    // 1. Այս ֆունկցիան պետք է ստանա UID
-    function loadUserData(uid) {
-        onValue(ref(db, `users/${uid}`), (snapshot) => { // MY_PAGE_UID-ն սարքիր uid
+    function loadUserData() {
+        onValue(ref(db, `users/${MY_PAGE_UID}`), (snapshot) => {
             userData = snapshot.val();
             if(userData) {
                 document.getElementById('user-coins').innerText = userData.coins || 0;
@@ -461,18 +460,34 @@
         });
     }
 
-    // 2. Այս ֆունկցիան արդեն ճիշտ է, բայց ստուգիր, որ կանչելուց 'uid' տաս
     function loadUserGames(uid) {
         onValue(ref(db, `users/${uid}/games`), (snapshot) => {
             const container = document.getElementById('games-container');
             container.innerHTML = "";
             if (!snapshot.exists()) {
-                container.innerHTML = "<h3>Игры не найдены.</h3>";
+                container.innerHTML = "<h3>Игры не найдены в базе.</h3>";
                 return;
             }
             snapshot.forEach((child) => {
                 const game = child.val();
-                let isFinished = game.status === 'passed'; 
+                
+                // --- ՓՈՓՈԽՎԱԾ ՀԱՏՎԱԾ ---
+                let isFinished = false;
+                
+                // Ստուգում ենք՝ արդյոք խաղն ունի առաջադրանքներ (tasks)
+                if (game.tasks) {
+                    const tasksArray = Object.values(game.tasks);
+                    // every() մեթոդը վերադարձնում է true միայն այն դեպքում, 
+                    // եթե բոլոր task-երի status-ը 'passed' է
+                    if (tasksArray.length > 0) {
+                        isFinished = tasksArray.every(task => task.status === 'passed');
+                    }
+                } else {
+                    // Եթե հանկարծ առաջադրանքներ չկան, նայում ենք ընդհանուր ստատուսին
+                    isFinished = game.status === 'passed';
+                }
+                // -----------------------
+
                 let statusText = isFinished ? 'Завершено' : 'Еще осталось';
                 let statusClass = isFinished ? 'done' : 'pending';
 
@@ -490,11 +505,8 @@
             });
         });
     }
-
-   window.openGameTasks = async (gameId) => {
-        const user = auth.currentUser; // Վերցնում ենք ընթացիկ օգտատիրոջը
-        if (!user) return;
-        const gameSnapshot = await get(ref(db, `users/${user.uid}/games/${gameId}`));
+    window.openGameTasks = async (gameId) => {
+        const gameSnapshot = await get(ref(db, `users/${MY_PAGE_UID}/games/${gameId}`));
         const game = gameSnapshot.val();
         currentGameUrl = game.url;
         document.getElementById('modal-game-name').innerText = game.name;
