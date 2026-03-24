@@ -524,17 +524,29 @@
     };
 
     window.upgradeRank = async () => {
-        if (userData.level < 10) { alert("Нужен уровень 10!"); return; }
-        const currentRankCost = userData.rankPrice || 1000;
-        if (userData.coins >= currentRankCost) {
-            await update(ref(db, `users/${MY_PAGE_UID}`), {
-                coins: userData.coins - currentRankCost,
-                rank: (userData.rank || 1) + 1,
-                level: userData.level + 1
-            });
-            closeModals();
-        } else { alert("Недостаточно монет!"); }
-    };
+    // Հաշվարկում ենք անհրաժեշտ լևելը ըստ ընթացիկ ռանգի
+    // Եթե ռանգը 1 է, պետք է 10 լևել
+    // Եթե ռանգը 2 է, պետք է 20 լևել և այլն
+    const requiredLevel = (userData.rank || 1) * 10;
+
+    if (userData.level < requiredLevel) { 
+        alert(`Для получения следующего ранга нужен Уровень ${requiredLevel}!`); 
+        return; 
+    }
+
+    const currentRankCost = userData.rankPrice || 1000;
+
+    if (userData.coins >= currentRankCost) {
+        await update(ref(db, `users/${MY_PAGE_UID}`), {
+            coins: userData.coins - currentRankCost,
+            rank: (userData.rank || 1) + 1,
+            level: userData.level // Լևելը թողնում ենք նույնը կամ կարող ես ավելացնել +1
+        });
+        closeModals();
+    } else { 
+        alert("Недостаточно монет!"); 
+    }
+};
 
     function getLevelCost(currentLevel) {
         const price = userData.levelPrice || 100;
