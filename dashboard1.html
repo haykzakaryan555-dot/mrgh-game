@@ -396,11 +396,13 @@
     let currentGameUrl = "";
 
     onAuthStateChanged(auth, (user) => {
-        if (!user || user.uid !== MY_PAGE_UID) {
-            window.location.href = "index.html";
+        if (user) {
+            // Վերցնում ենք հենց էն մարդու UID-ն, ով մուտք է գործել
+            const uid = user.uid; 
+            loadUserData(uid);
+            loadUserGames(uid);
         } else {
-            loadUserData();
-            loadUserGames();
+            window.location.href = "index.html";
         }
     });
 
@@ -463,14 +465,12 @@
             const container = document.getElementById('games-container');
             container.innerHTML = "";
             if (!snapshot.exists()) {
-                container.innerHTML = "<h3>Пока нет доступных игр.</h3>";
+                container.innerHTML = "<h3>Игры не найдены в базе.</h3>";
                 return;
             }
             snapshot.forEach((child) => {
                 const game = child.val();
-                
-                // Ստուգում ենք 'passed' ստատուսը, քանի որ քո Firebase-ում այդպես է գրված
-                let isDone = game.status === 'passed';
+                let isDone = game.status === 'passed'; // Հենց քո բազայի տերմինը
                 let statusText = isDone ? 'Завершено' : 'Еще осталось';
                 let statusClass = isDone ? 'done' : 'pending';
 
