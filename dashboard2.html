@@ -458,8 +458,8 @@
         });
     }
 
-    function loadUserGames() {
-        onValue(ref(db, `users/${MY_PAGE_UID}/games`), (snapshot) => {
+    function loadUserGames(uid) {
+        onValue(ref(db, `users/${uid}/games`), (snapshot) => {
             const container = document.getElementById('games-container');
             container.innerHTML = "";
             if (!snapshot.exists()) {
@@ -469,10 +469,10 @@
             snapshot.forEach((child) => {
                 const game = child.val();
                 
-                // Ստուգում ենք ստատուսը՝ անկախ մեծատառ-փոքրատառից
-                let gameStatus = (game.status || "").toLowerCase(); 
-                let statusText = gameStatus === 'passed' ? 'Завершено' : 'Еще осталось';
-                let statusClass = gameStatus === 'passed' ? 'done' : 'pending';
+                // Ստուգում ենք 'passed' ստատուսը, քանի որ քո Firebase-ում այդպես է գրված
+                let isDone = game.status === 'passed';
+                let statusText = isDone ? 'Завершено' : 'Еще осталось';
+                let statusClass = isDone ? 'done' : 'pending';
 
                 container.innerHTML += `
                     <div class="game-card">
