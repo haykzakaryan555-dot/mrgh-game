@@ -471,8 +471,8 @@
                 
                 // Ստուգում ենք ստատուսը՝ անկախ մեծատառ-փոքրատառից
                 let gameStatus = (game.status || "").toLowerCase(); 
-                let statusText = gameStatus === 'done' ? 'Завершено' : 'Еще осталось';
-                let statusClass = gameStatus === 'done' ? 'done' : 'pending';
+                let statusText = gameStatus === 'passed' ? 'Завершено' : 'Еще осталось';
+                let statusClass = gameStatus === 'passed' ? 'done' : 'pending';
 
                 container.innerHTML += `
                     <div class="game-card">
