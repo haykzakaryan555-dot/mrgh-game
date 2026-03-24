@@ -429,7 +429,7 @@
         if (userData.coins >= currentRankCost) {
             await update(ref(db, `users/${MY_PAGE_UID}`), {
                 coins: userData.coins - currentRankCost,
-                level: 1,
+                level: userData.level + 1,
                 rank: (userData.rank || 1) + 1
             });
             closeModals();
