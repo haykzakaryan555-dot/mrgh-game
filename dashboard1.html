@@ -470,9 +470,10 @@
             }
             snapshot.forEach((child) => {
                 const game = child.val();
-                let isDone = game.status === 'passed'; // Հենց քո բազայի տերմինը
-                let statusText = isDone ? 'Завершено' : 'Еще осталось';
-                let statusClass = isDone ? 'done' : 'pending';
+                // ՍԱ ԷՆ ՀԱՏՎԱԾՆ Է, ՈՐԻՑ ԽՆԴԻՐՆ ԱՌԱՋԱՑԵԼ Է
+                let isFinished = game.status === 'passed'; // Փոխել ենք 'passed', որ համընկնի բազայիդ հետ
+                let statusText = isFinished ? 'Завершено' : 'Еще осталось';
+                let statusClass = isFinished ? 'done' : 'pending';
 
                 container.innerHTML += `
                     <div class="game-card">
