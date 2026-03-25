@@ -11,6 +11,7 @@
         .uid-item { padding: 15px; border-bottom: 1px solid #eee; cursor: pointer; text-align: center; transition: 0.2s; font-weight: bold; color: #555; }
         .uid-item:hover { background: #f9f9f9; color: #000; }
         .promo-menu-item { color: #27ae60; border-bottom: 2px solid #eee; }
+        .games-all-menu-item { color: #3498db; border-bottom: 2px solid #eee; margin-top: 10px; }
 
         .game-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 20px; }
         .admin-game-card { border: 1px solid #ddd; padding: 15px; border-radius: 8px; text-align: center; }
@@ -35,6 +36,10 @@
             padding: 10px; background: #fff; border: 1px solid #eee; margin-bottom: 5px; border-radius: 5px;
         }
         .promo-info b { color: #27ae60; }
+        
+        .user-selection-box { background: #f9f9f9; padding: 15px; border-radius: 8px; margin-bottom: 15px; border: 1px solid #ddd; }
+        .user-checkbox-list { margin-top: 10px; max-height: 150px; overflow-y: auto; background: white; padding: 10px; border: 1px solid #eee; border-radius: 5px; }
+        .user-checkbox-list label { display: block; margin-bottom: 5px; cursor: pointer; }
     </style>
 </head>
 <body oncontextmenu="return true;"> <div class="container">
@@ -42,6 +47,7 @@
         <h2>Խաղացողների Ցուցակ</h2>
         <div id="uid-list">Բեռնվում է...</div>
         <div class="uid-item promo-menu-item" onclick="showPromoView()">PROMOCodes</div>
+        <div class="uid-item games-all-menu-item" onclick="showAllGamesView()">Games All Users</div>
     </div>
 
     <div id="view-promo" class="hidden">
@@ -55,15 +61,29 @@
         <div id="promo-list-container"></div>
     </div>
 
+    <div id="view-all-games" class="hidden">
+        <button class="btn btn-back" onclick="showMenuFromAllGames()">← Հետ դեպի Մենյու</button>
+        <h2>Բոլոր Խաղերը (Ընդհանուր)</h2>
+        <button class="btn btn-add" onclick="showAddGame(true)">+</button>
+        <div id="all-games-container" class="game-grid"></div>
+    </div>
+
     <div id="view-user" class="hidden">
         <button class="btn btn-back" onclick="showMenu()">← Հետ դեպի Մենյու</button>
         <h2 id="selected-user-title"></h2>
-        <button class="btn btn-add" onclick="showAddGame()">+</button>
+        <button class="btn btn-add" onclick="showAddGame(false)">+</button>
         <div id="games-container" class="game-grid"></div>
     </div>
 
     <div id="view-add-game" class="hidden">
         <h2>Ավելացնել / Փոփոխել Խաղ</h2>
+        
+        <div id="target-users-section" class="user-selection-box hidden">
+            <h3 style="margin-top:0;">Ընտրել Խաղացողներին</h3>
+            <label style="font-weight:bold; cursor:pointer;"><input type="checkbox" id="selectAllUsers" onchange="toggleAllUsers()"> Նշել Բոլորին</label>
+            <div id="users-checkbox-list" class="user-checkbox-list"></div>
+        </div>
+
         <input type="text" id="gameName" placeholder="Game Name">
         <input type="text" id="gameImage" placeholder="Game Image URL">
         <input type="text" id="gameUrl" placeholder="Game URL">
@@ -101,11 +121,15 @@
     let currentUid = "";
     let currentGameId = "";
     let editingGameId = null;
+    
+    // Global Mode Variables
+    let allUsersData = {};
+    let globalGroupedGames = {};
+    let isGlobalMode = false;
+    let editingGlobalHash = null;
 
-    // Բագի ուղղում. կանխում ենք ավելորդ աջ click-ի իրադարձությունները
     document.addEventListener('contextmenu', (e) => {
         if (e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
-            // Թույլ ենք տալիս միայն ստանդարտ վարքը, բայց կանխում ենք սկրիպտային կանչերը
         }
     });
 
@@ -116,16 +140,27 @@
     });
 
     onValue(ref(db, 'users'), (snapshot) => {
+        allUsersData = snapshot.val() || {};
         const listDiv = document.getElementById('uid-list');
         listDiv.innerHTML = "";
+        
         if(snapshot.exists()){
             snapshot.forEach((child) => {
+                const uid = child.key;
+                const userData = child.val();
+                const username = userData.username || uid; // User name from DB
+                
                 const div = document.createElement('div');
                 div.className = 'uid-item';
-                div.innerText = child.key;
-                div.onclick = () => openUser(child.key);
+                div.innerText = username;
+                div.onclick = () => openUser(uid);
                 listDiv.appendChild(div);
             });
+        }
+        
+        // Auto-refresh the global games view if it is currently open
+        if(!document.getElementById('view-all-games').classList.contains('hidden')) {
+            loadGlobalGames();
         }
     });
 
@@ -166,10 +201,9 @@
         if (!code || !reward) { alert("Լրացրեք բոլոր դաշտերը"); return; }
 
         try {
-            // Ավելացնում ենք եզակի ID (timestamp), որպեսզի Dashboard-ը հասկանա, որ սա նոր պրոմոկոդ է
             await set(ref(db, `promocodes/${code}`), { 
                 reward: parseInt(reward),
-                promoId: Date.now() // Սա թույլ կտա նույն անունով կոդը նորից օգտագործել ջնջելուց հետո
+                promoId: Date.now() 
             });
             document.getElementById('admin-promo-code').value = "";
             document.getElementById('admin-promo-reward').value = "";
@@ -185,11 +219,226 @@
         }
     };
 
+    // --- GAMES ALL USERS LOGIC ---
+    window.showAllGamesView = () => {
+        document.getElementById('view-menu').classList.add('hidden');
+        document.getElementById('view-all-games').classList.remove('hidden');
+        loadGlobalGames();
+    };
+
+    window.showMenuFromAllGames = () => {
+        document.getElementById('view-all-games').classList.add('hidden');
+        document.getElementById('view-menu').classList.remove('hidden');
+    };
+
+    // Հաշվում ենք խաղի յուրահատուկ բանալին՝ հիմնված անվան, նկարի, url-ի և առաջադրանքների վրա
+    function getGameHash(game) {
+        let tasksStr = "";
+        if (game.tasks) {
+            let tasks = Object.values(game.tasks).map(t => t.desc + ":" + t.cost).sort();
+            tasksStr = tasks.join("|");
+        }
+        return `${game.name}_${game.image}_${game.url}_${tasksStr}`;
+    }
+
+    function loadGlobalGames() {
+        globalGroupedGames = {};
+        const container = document.getElementById('all-games-container');
+        container.innerHTML = "";
+
+        Object.entries(allUsersData).forEach(([uid, userData]) => {
+            const username = userData.username || uid;
+            if (userData.games) {
+                Object.entries(userData.games).forEach(([gameId, game]) => {
+                    const hash = getGameHash(game);
+                    if (!globalGroupedGames[hash]) {
+                        globalGroupedGames[hash] = {
+                            gameData: game,
+                            instances: []
+                        };
+                    }
+                    globalGroupedGames[hash].instances.push({ uid, username, gameId, tasks: game.tasks });
+                });
+            }
+        });
+
+        Object.entries(globalGroupedGames).forEach(([hash, group]) => {
+            const game = group.gameData;
+            const userNames = group.instances.map(i => i.username).join(', ');
+            
+            const div = document.createElement('div');
+            div.className = 'admin-game-card';
+            div.innerHTML = `
+                <img src="${game.image}" alt="">
+                <h4>${game.name}</h4>
+                <p style="font-size: 11px; color: #7f8c8d; margin: 5px 0;">Խաղացողներ (${group.instances.length}):<br><b>${userNames}</b></p>
+                <button class="btn btn-enter">Enter</button>
+                <button class="btn btn-change">Change</button>
+                <button class="btn btn-copy">Copy</button>
+                <button class="btn btn-delete">Delete</button>
+            `;
+            div.querySelector('.btn-enter').onclick = () => enterGlobalGame(hash, game.name);
+            div.querySelector('.btn-change').onclick = () => editGlobalGame(hash);
+            div.querySelector('.btn-copy').onclick = () => copyGlobalGame(hash);
+            div.querySelector('.btn-delete').onclick = () => deleteGlobalGame(hash);
+            container.appendChild(div);
+        });
+    }
+
+    window.toggleAllUsers = () => {
+        const isChecked = document.getElementById('selectAllUsers').checked;
+        const checkboxes = document.querySelectorAll('.user-checkbox');
+        checkboxes.forEach(cb => cb.checked = isChecked);
+    };
+
+    window.editGlobalGame = (hash) => {
+        isGlobalMode = true;
+        editingGlobalHash = hash;
+        const group = globalGroupedGames[hash];
+        const game = group.gameData;
+        
+        document.getElementById('gameName').value = game.name || "";
+        document.getElementById('gameImage').value = game.image || "";
+        document.getElementById('gameUrl').value = game.url || "";
+        
+        const tasksContainer = document.getElementById('tasks-inputs');
+        tasksContainer.innerHTML = ""; 
+        if (game.tasks) {
+            Object.values(game.tasks).forEach(task => {
+                const row = document.createElement('div');
+                row.className = 'task-input-row';
+                row.innerHTML = `<input type="text" class="task-name" value="${task.desc}">
+                                 <input type="number" class="task-cost" style="width: 80px;" value="${task.cost}">`;
+                tasksContainer.appendChild(row);
+            });
+        } else { addTaskInput(); }
+
+        const userSection = document.getElementById('target-users-section');
+        userSection.classList.remove('hidden');
+        const cbList = document.getElementById('users-checkbox-list');
+        cbList.innerHTML = "";
+        document.getElementById('selectAllUsers').checked = false;
+        
+        const hasGameUids = group.instances.map(i => i.uid);
+        
+        Object.entries(allUsersData).forEach(([uid, userData]) => {
+            const username = userData.username || uid;
+            const isChecked = hasGameUids.includes(uid) ? "checked" : "";
+            const div = document.createElement('div');
+            div.innerHTML = `<label><input type="checkbox" class="user-checkbox" value="${uid}" ${isChecked}> ${username}</label>`;
+            cbList.appendChild(div);
+        });
+
+        document.getElementById('view-all-games').classList.add('hidden');
+        document.getElementById('view-add-game').classList.remove('hidden');
+    };
+
+    window.copyGlobalGame = async (hash) => {
+        const group = globalGroupedGames[hash];
+        const game = group.gameData;
+        const updates = {};
+        
+        group.instances.forEach(instance => {
+            const newGameId = push(ref(db)).key;
+            let cleanTasks = {};
+            if(game.tasks) {
+                Object.values(game.tasks).forEach(t => {
+                    cleanTasks[push(ref(db)).key] = { desc: t.desc, cost: t.cost, status: 'pending' };
+                });
+            }
+            updates[`users/${instance.uid}/games/${newGameId}`] = { ...game, name: game.name + " (Copy)", tasks: cleanTasks };
+        });
+        
+        await update(ref(db), updates);
+    };
+
+    window.deleteGlobalGame = async (hash) => {
+        if(confirm("Հաստատ ջնջե՞լ այս խաղը բոլոր նշված խաղացողների մոտից")) {
+            const group = globalGroupedGames[hash];
+            const updates = {};
+            group.instances.forEach(instance => {
+                updates[`users/${instance.uid}/games/${instance.gameId}`] = null;
+            });
+            await update(ref(db), updates);
+        }
+    };
+
+    window.enterGlobalGame = (hash, gameName) => {
+        isGlobalMode = true;
+        editingGlobalHash = hash;
+        document.getElementById('view-all-games').classList.add('hidden');
+        document.getElementById('view-tasks').classList.remove('hidden');
+        document.getElementById('task-game-name').innerText = gameName + " (Բոլորի մոտ)";
+        
+        const group = globalGroupedGames[hash];
+        const list = document.getElementById('task-list');
+        list.innerHTML = "";
+        
+        if(group.gameData.tasks) {
+            Object.values(group.gameData.tasks).forEach((templateTask) => {
+                let allPassed = true;
+                group.instances.forEach(inst => {
+                    if (inst.tasks) {
+                        const match = Object.values(inst.tasks).find(t => t.desc === templateTask.desc);
+                        if (!match || match.status !== 'passed') allPassed = false;
+                    } else { allPassed = false; }
+                });
+
+                const isPassed = allPassed;
+                const div = document.createElement('div');
+                div.style = "padding:10px; border-bottom:1px solid #ddd; display:flex; justify-content:space-between; align-items:center;";
+                div.innerHTML = `
+                    <span>${templateTask.desc} (<b>${templateTask.cost}</b>)</span>
+                    <button class="btn btn-passed" style="background: ${isPassed ? '#27ae60' : '#e67e22'}; color: white;">
+                        ${isPassed ? 'PASSED (Բոլորը)' : 'PASS (Բոլորը)'}
+                    </button>
+                `;
+                div.querySelector('.btn-passed').onclick = () => toggleGlobalTask(hash, templateTask.desc, templateTask.cost, isPassed);
+                list.appendChild(div);
+            });
+        }
+    };
+
+    window.toggleGlobalTask = async (hash, taskDesc, cost, isPassed) => {
+        const group = globalGroupedGames[hash];
+        const updates = {};
+        
+        if (isPassed) {
+            if(!confirm("Հաստատ չեղարկե՞լ բոլորի մոտ")) return;
+        }
+        
+        group.instances.forEach(inst => {
+            let currentCoins = allUsersData[inst.uid]?.coins || 0;
+            if (inst.tasks) {
+                const matchEntry = Object.entries(inst.tasks).find(([tId, t]) => t.desc === taskDesc);
+                if (matchEntry) {
+                    const taskId = matchEntry[0];
+                    const taskStatus = matchEntry[1].status;
+                    
+                    if (isPassed && taskStatus === 'passed') {
+                        updates[`users/${inst.uid}/games/${inst.gameId}/tasks/${taskId}/status`] = 'pending';
+                        updates[`users/${inst.uid}/coins`] = currentCoins - cost;
+                    } else if (!isPassed && taskStatus !== 'passed') {
+                        updates[`users/${inst.uid}/games/${inst.gameId}/tasks/${taskId}/status`] = 'passed';
+                        updates[`users/${inst.uid}/coins`] = currentCoins + cost;
+                    }
+                }
+            }
+        });
+        
+        await update(ref(db), updates);
+        setTimeout(() => enterGlobalGame(hash, group.gameData.name), 300); // refresh
+    };
+
+
+    // --- SPECIFIC USER LOGIC ---
     window.openUser = (uid) => {
         currentUid = uid;
         document.getElementById('view-menu').classList.add('hidden');
         document.getElementById('view-user').classList.remove('hidden');
-        document.getElementById('selected-user-title').innerText = "Կառավարում: " + uid;
+        
+        const username = allUsersData[uid] ? (allUsersData[uid].username || uid) : uid;
+        document.getElementById('selected-user-title').innerText = "Կառավարում: " + username;
         loadGames();
     };
 
@@ -228,22 +477,48 @@
 
     window.hideAddGame = () => {
         document.getElementById('view-add-game').classList.add('hidden');
-        document.getElementById('view-user').classList.remove('hidden');
+        if (isGlobalMode) {
+            document.getElementById('view-all-games').classList.remove('hidden');
+        } else {
+            document.getElementById('view-user').classList.remove('hidden');
+        }
     };
 
-    window.showAddGame = () => {
+    window.showAddGame = (global = false) => {
+        isGlobalMode = global === true;
         editingGameId = null;
+        editingGlobalHash = null;
         document.getElementById('gameName').value = "";
         document.getElementById('gameImage').value = "";
         document.getElementById('gameUrl').value = "";
         document.getElementById('tasks-inputs').innerHTML = "";
         addTaskInput();
-        document.getElementById('view-user').classList.add('hidden');
+
+        const userSection = document.getElementById('target-users-section');
+        if (isGlobalMode) {
+            userSection.classList.remove('hidden');
+            const cbList = document.getElementById('users-checkbox-list');
+            cbList.innerHTML = "";
+            document.getElementById('selectAllUsers').checked = false;
+            Object.entries(allUsersData).forEach(([uid, userData]) => {
+                const username = userData.username || uid;
+                const div = document.createElement('div');
+                div.innerHTML = `<label><input type="checkbox" class="user-checkbox" value="${uid}"> ${username}</label>`;
+                cbList.appendChild(div);
+            });
+            document.getElementById('view-all-games').classList.add('hidden');
+        } else {
+            userSection.classList.add('hidden');
+            document.getElementById('view-user').classList.add('hidden');
+        }
         document.getElementById('view-add-game').classList.remove('hidden');
     };
 
     window.editGame = async (gameId) => {
+        isGlobalMode = false;
         editingGameId = gameId; 
+        document.getElementById('target-users-section').classList.add('hidden');
+        
         const snapshot = await get(ref(db, `users/${currentUid}/games/${gameId}`));
         const game = snapshot.val();
         document.getElementById('gameName').value = game.name || "";
@@ -272,20 +547,84 @@
         const url = document.getElementById('gameUrl').value;
         const taskNames = document.querySelectorAll('.task-name');
         const taskCosts = document.querySelectorAll('.task-cost');
-        let tasks = {};
-        taskNames.forEach((input, index) => {
-            if(input.value) {
-                const row = input.parentElement;
-                const taskId = row.dataset.taskId || push(ref(db)).key;
-                tasks[taskId] = { desc: input.value, cost: parseInt(taskCosts[index].value) || 0, status: row.dataset.status || 'pending' };
-            }
-        });
 
-        const gameData = { name, image, url, tasks };
-        if (editingGameId) {
-            await update(ref(db, `users/${currentUid}/games/${editingGameId}`), gameData);
+        if (!isGlobalMode) {
+            // Հին տրամաբանություն. պահպանվում է միայն 1 յուզերի մոտ
+            let tasks = {};
+            const originalTasksRows = document.querySelectorAll('.task-input-row');
+            originalTasksRows.forEach((row, index) => {
+                const nameInput = row.querySelector('.task-name');
+                const costInput = row.querySelector('.task-cost');
+                if (nameInput && nameInput.value) {
+                    const taskId = row.dataset.taskId || push(ref(db)).key;
+                    tasks[taskId] = { desc: nameInput.value, cost: parseInt(costInput.value) || 0, status: row.dataset.status || 'pending' };
+                }
+            });
+
+            const gameData = { name, image, url, tasks };
+            if (editingGameId) {
+                await update(ref(db, `users/${currentUid}/games/${editingGameId}`), gameData);
+            } else {
+                await set(push(ref(db, `users/${currentUid}/games`)), gameData);
+            }
         } else {
-            await set(push(ref(db, `users/${currentUid}/games`)), gameData);
+            // ՆՈՐ տրամաբանություն. պահպանվում է բոլոր ընտրվածների մոտ
+            let newTasksArray = [];
+            taskNames.forEach((input, index) => {
+                if(input.value) {
+                    newTasksArray.push({ desc: input.value, cost: parseInt(taskCosts[index].value) || 0 });
+                }
+            });
+
+            const selectedUids = Array.from(document.querySelectorAll('.user-checkbox:checked')).map(cb => cb.value);
+            
+            if (editingGlobalHash) {
+                const group = globalGroupedGames[editingGlobalHash];
+                const oldUids = group.instances.map(i => i.uid);
+                const updates = {};
+                
+                selectedUids.forEach(uid => {
+                    const existingInstance = group.instances.find(i => i.uid === uid);
+                    const gameId = existingInstance ? existingInstance.gameId : push(ref(db)).key;
+                    
+                    let finalTasks = {};
+                    newTasksArray.forEach(newTask => {
+                        let existingTaskId = null;
+                        let existingStatus = 'pending';
+                        if (existingInstance && existingInstance.tasks) {
+                            const match = Object.entries(existingInstance.tasks).find(([id, t]) => t.desc === newTask.desc);
+                            if (match) {
+                                existingTaskId = match[0];
+                                existingStatus = match[1].status;
+                            }
+                        }
+                        const tId = existingTaskId || push(ref(db)).key;
+                        finalTasks[tId] = { desc: newTask.desc, cost: newTask.cost, status: existingStatus };
+                    });
+
+                    updates[`users/${uid}/games/${gameId}`] = { name, image, url, tasks: finalTasks };
+                });
+                
+                oldUids.forEach(uid => {
+                    if (!selectedUids.includes(uid)) {
+                        const existingInstance = group.instances.find(i => i.uid === uid);
+                        updates[`users/${uid}/games/${existingInstance.gameId}`] = null;
+                    }
+                });
+                
+                await update(ref(db), updates);
+            } else {
+                const updates = {};
+                selectedUids.forEach(uid => {
+                    const gameId = push(ref(db)).key;
+                    let tasks = {};
+                    newTasksArray.forEach(newTask => {
+                        tasks[push(ref(db)).key] = { desc: newTask.desc, cost: newTask.cost, status: 'pending' };
+                    });
+                    updates[`users/${uid}/games/${gameId}`] = { name, image, url, tasks };
+                });
+                await update(ref(db), updates);
+            }
         }
         hideAddGame();
     };
@@ -309,6 +648,7 @@
     };
 
     window.enterGame = (gameId, gameName) => {
+        isGlobalMode = false;
         currentGameId = gameId;
         document.getElementById('view-user').classList.add('hidden');
         document.getElementById('view-tasks').classList.remove('hidden');
@@ -352,7 +692,11 @@
 
     window.backToUser = () => {
         document.getElementById('view-tasks').classList.add('hidden');
-        document.getElementById('view-user').classList.remove('hidden');
+        if (isGlobalMode) {
+            document.getElementById('view-all-games').classList.remove('hidden');
+        } else {
+            document.getElementById('view-user').classList.remove('hidden');
+        }
     };
 
     window.addTaskInput = () => {
