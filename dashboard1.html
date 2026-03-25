@@ -391,16 +391,16 @@
     const db = getDatabase(app);
     const auth = getAuth(app);
 
-    const MY_PAGE_UID = "SOHqHyiFeEVu2lp2uwBAq6ZQ06N2";
-    let userData = {}; 
+    // Ստեղծում ենք currentUid փոփոխականը MY_PAGE_UID-ի փոխարեն
+    let currentUid = ""; 
+    let userData = {};  
     let currentGameUrl = "";
 
     onAuthStateChanged(auth, (user) => {
         if (user) {
-            // Վերցնում ենք հենց էն մարդու UID-ն, ով մուտք է գործել
-            const uid = user.uid; 
-            loadUserData(uid);
-            loadUserGames(uid);
+            currentUid = user.uid; // Պահպանում ենք ակտիվ օգտատիրոջ UID-ն
+            loadUserData(currentUid);
+            loadUserGames(currentUid);
         } else {
             window.location.href = "index.html";
         }
@@ -422,7 +422,8 @@
         if (promoSnapshot.exists()) {
             const promoData = promoSnapshot.val();
             const promoId = promoData.promoId || "legacy";
-            const userPromoRef = ref(db, `users/${MY_PAGE_UID}/usedPromos/${promoCode}`);
+            // Օգտագործում ենք currentUid
+            const userPromoRef = ref(db, `users/${currentUid}/usedPromos/${promoCode}`);
             const userPromoSnapshot = await get(userPromoRef);
 
             if (userPromoSnapshot.exists() && userPromoSnapshot.val() === promoId) {
@@ -430,8 +431,8 @@
             } else {
                 const reward = parseInt(promoData.reward);
                 const updates = {};
-                updates[`users/${MY_PAGE_UID}/coins`] = (userData.coins || 0) + reward;
-                updates[`users/${MY_PAGE_UID}/usedPromos/${promoCode}`] = promoId;
+                updates[`users/${currentUid}/coins`] = (userData.coins || 0) + reward;
+                updates[`users/${currentUid}/usedPromos/${promoCode}`] = promoId;
                 await update(ref(db), updates);
                 alert(`Успешно! Вы получили ${reward} coins!`);
                 promoInput.value = "";
@@ -440,8 +441,9 @@
         } else { alert("Неверный промокод!"); }
     };
 
-    function loadUserData() {
-        onValue(ref(db, `users/${MY_PAGE_UID}`), (snapshot) => {
+    // Ավելացնում ենք uid արգումենտը
+    function loadUserData(uid) {
+        onValue(ref(db, `users/${uid}`), (snapshot) => {
             userData = snapshot.val();
             if(userData) {
                 document.getElementById('user-coins').innerText = userData.coins || 0;
@@ -468,30 +470,25 @@
                 container.innerHTML = "<h3>Игры не найдены в базе.</h3>";
                 return;
             }
+            
+            let htmlContent = ""; // Օպտիմիզացիա՝ DOM-ը մեկ անգամ թարմացնելու համար
             snapshot.forEach((child) => {
                 const game = child.val();
-                
-                // --- ՓՈՓՈԽՎԱԾ ՀԱՏՎԱԾ ---
                 let isFinished = false;
                 
-                // Ստուգում ենք՝ արդյոք խաղն ունի առաջադրանքներ (tasks)
                 if (game.tasks) {
                     const tasksArray = Object.values(game.tasks);
-                    // every() մեթոդը վերադարձնում է true միայն այն դեպքում, 
-                    // եթե բոլոր task-երի status-ը 'passed' է
                     if (tasksArray.length > 0) {
                         isFinished = tasksArray.every(task => task.status === 'passed');
                     }
                 } else {
-                    // Եթե հանկարծ առաջադրանքներ չկան, նայում ենք ընդհանուր ստատուսին
                     isFinished = game.status === 'passed';
                 }
-                // -----------------------
 
                 let statusText = isFinished ? 'Завершено' : 'Еще осталось';
                 let statusClass = isFinished ? 'done' : 'pending';
 
-                container.innerHTML += `
+                htmlContent += `
                     <div class="game-card">
                         <div class="game-info-wrapper">
                             <img src="${game.image}" class="game-image">
@@ -503,24 +500,30 @@
                         </div>
                     </div>`;
             });
+            container.innerHTML = htmlContent;
         });
     }
+
     window.openGameTasks = async (gameId) => {
-        const gameSnapshot = await get(ref(db, `users/${MY_PAGE_UID}/games/${gameId}`));
+        // Օգտագործում ենք currentUid
+        const gameSnapshot = await get(ref(db, `users/${currentUid}/games/${gameId}`));
         const game = gameSnapshot.val();
         currentGameUrl = game.url;
         document.getElementById('modal-game-name').innerText = game.name;
         const taskListDiv = document.getElementById('modal-task-list');
         taskListDiv.innerHTML = "";
-        if(game.tasks) {
+        
+        if(game && game.tasks) {
+            let tasksHtml = "";
             Object.values(game.tasks).forEach(task => {
                 const statusClass = task.status === 'passed' ? 'passed' : 'pending';
-                taskListDiv.innerHTML += `
+                tasksHtml += `
                     <div class="task-item ${statusClass}">
                         <div class="task-desc">→ ${task.desc}</div>
                         <div class="task-reward"><span>${task.cost}</span><div class="coin-icon" style="width:25px;height:25px;font-size:14px;">C</div></div>
                     </div>`;
             });
+            taskListDiv.innerHTML = tasksHtml;
         }
         document.getElementById('tasksModal').style.display = 'flex';
     };
@@ -533,7 +536,8 @@
     window.upgradeLevel = async () => {
         const cost = getLevelCost(userData.level);
         if (userData.coins >= cost) {
-            await update(ref(db, `users/${MY_PAGE_UID}`), {
+            // Օգտագործում ենք currentUid
+            await update(ref(db, `users/${currentUid}`), {
                 coins: userData.coins - cost,
                 level: (userData.level || 1) + 1
             });
@@ -542,42 +546,33 @@
     };
 
    window.openRankModal = () => {
-    // Հաշվում ենք, թե քանի լևել է պետք հաջորդ ռանգի համար
     const requiredLevel = (userData.rank || 1) * 10;
-    
-    // Թարմացնում ենք տեքստը մոդալ պատուհանի մեջ
     document.getElementById('rank-required-level').innerText = `Уровень ${requiredLevel}`;
-    
-    // Գինը թարմացնելը (արդեն ունեիր)
     document.getElementById('rank-cost').innerText = userData.rankPrice || 1000;
-    
     document.getElementById('rankModal').style.display = 'flex';
-};
+   };
 
     window.upgradeRank = async () => {
-    // Հաշվարկում ենք անհրաժեշտ լևելը ըստ ընթացիկ ռանգի
-    // Եթե ռանգը 1 է, պետք է 10 լևել
-    // Եթե ռանգը 2 է, պետք է 20 լևել և այլն
-    const requiredLevel = (userData.rank || 1) * 10;
+        const requiredLevel = (userData.rank || 1) * 10;
+        if (userData.level < requiredLevel) { 
+            alert(`Для получения следующего ранга нужен Уровень ${requiredLevel}!`); 
+            return; 
+        }
 
-    if (userData.level < requiredLevel) { 
-        alert(`Для получения следующего ранга нужен Уровень ${requiredLevel}!`); 
-        return; 
-    }
+        const currentRankCost = userData.rankPrice || 1000;
 
-    const currentRankCost = userData.rankPrice || 1000;
-
-    if (userData.coins >= currentRankCost) {
-        await update(ref(db, `users/${MY_PAGE_UID}`), {
-            coins: userData.coins - currentRankCost,
-            rank: (userData.rank || 1) + 1,
-            level: userData.level // Լևելը թողնում ենք նույնը կամ կարող ես ավելացնել +1
-        });
-        closeModals();
-    } else { 
-        alert("Недостаточно монет!"); 
-    }
-};
+        if (userData.coins >= currentRankCost) {
+            // Օգտագործում ենք currentUid
+            await update(ref(db, `users/${currentUid}`), {
+                coins: userData.coins - currentRankCost,
+                rank: (userData.rank || 1) + 1,
+                level: userData.level 
+            });
+            closeModals();
+        } else { 
+            alert("Недостаточно монет!"); 
+        }
+    };
 
     function getLevelCost(currentLevel) {
         const price = userData.levelPrice || 100;
