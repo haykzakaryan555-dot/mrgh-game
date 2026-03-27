@@ -375,7 +375,12 @@
         list.innerHTML = "";
         
         if(group.gameData.tasks) {
-            Object.values(group.gameData.tasks).forEach((templateTask) => {
+            // ԱՎԵԼԱՑՎԱԾ Է ՍՈՐՏԱՎՈՐՈՒՄ ԸՍՏ ID-ի
+            const sortedTasks = Object.entries(group.gameData.tasks)
+                                      .sort((a, b) => a[0].localeCompare(b[0]))
+                                      .map(e => e[1]);
+
+            sortedTasks.forEach((templateTask) => {
                 let allPassed = true;
                 group.instances.forEach(inst => {
                     if (inst.tasks) {
@@ -527,7 +532,9 @@
         const tasksContainer = document.getElementById('tasks-inputs');
         tasksContainer.innerHTML = ""; 
         if (game.tasks) {
-            Object.entries(game.tasks).forEach(([taskId, task]) => {
+            // ԱՎԵԼԱՑՎԱԾ Է ՍՈՐՏԱՎՈՐՈՒՄ ԸՍՏ ID-ի
+            const sortedTasks = Object.entries(game.tasks).sort((a, b) => a[0].localeCompare(b[0]));
+            sortedTasks.forEach(([taskId, task]) => {
                 const row = document.createElement('div');
                 row.className = 'task-input-row';
                 row.dataset.taskId = taskId; 
@@ -549,7 +556,6 @@
         const taskCosts = document.querySelectorAll('.task-cost');
 
         if (!isGlobalMode) {
-            // Հին տրամաբանություն. պահպանվում է միայն 1 յուզերի մոտ
             let tasks = {};
             const originalTasksRows = document.querySelectorAll('.task-input-row');
             originalTasksRows.forEach((row, index) => {
@@ -568,7 +574,6 @@
                 await set(push(ref(db, `users/${currentUid}/games`)), gameData);
             }
         } else {
-            // ՆՈՐ տրամաբանություն. պահպանվում է բոլոր ընտրվածների մոտ
             let newTasksArray = [];
             taskNames.forEach((input, index) => {
                 if(input.value) {
@@ -657,8 +662,15 @@
             const list = document.getElementById('task-list');
             list.innerHTML = "";
             if(snapshot.exists()){
+                // ԱՎԵԼԱՑՎԱԾ Է ՍՈՐՏԱՎՈՐՈՒՄ ԸՍՏ ID-ի
+                let tasksArr = [];
                 snapshot.forEach((child) => {
-                    const task = child.val();
+                    tasksArr.push({ key: child.key, val: child.val() });
+                });
+                tasksArr.sort((a, b) => a.key.localeCompare(b.key));
+                
+                tasksArr.forEach((child) => {
+                    const task = child.val;
                     const isPassed = task.status === 'passed';
                     const div = document.createElement('div');
                     div.style = "padding:10px; border-bottom:1px solid #ddd; display:flex; justify-content:space-between; align-items:center;";
@@ -680,30 +692,26 @@
         const snapshot = await get(userCoinsRef);
         const currentCoins = snapshot.val() || 0;
         if (isPassed) {
-            if(confirm("Հաստատ չեղարկե՞լ")) {
-                await update(ref(db, `users/${currentUid}/games/${currentGameId}/tasks/${taskId}`), { status: 'pending' });
-                await set(userCoinsRef, currentCoins - cost);
-            }
+            if(!confirm("Հաստատ չեղարկե՞լ")) return;
+            await update(ref(db), {
+                [`users/${currentUid}/games/${currentGameId}/tasks/${taskId}/status`]: 'pending',
+                [`users/${currentUid}/coins`]: currentCoins - cost
+            });
         } else {
-            await update(ref(db, `users/${currentUid}/games/${currentGameId}/tasks/${taskId}`), { status: 'passed' });
-            await set(userCoinsRef, currentCoins + cost);
+            await update(ref(db), {
+                [`users/${currentUid}/games/${currentGameId}/tasks/${taskId}/status`]: 'passed',
+                [`users/${currentUid}/coins`]: currentCoins + cost
+            });
         }
     };
-
-    window.backToUser = () => {
-        document.getElementById('view-tasks').classList.add('hidden');
-        if (isGlobalMode) {
-            document.getElementById('view-all-games').classList.remove('hidden');
-        } else {
-            document.getElementById('view-user').classList.remove('hidden');
-        }
-    };
-
+    
     window.addTaskInput = () => {
+        const container = document.getElementById('tasks-inputs');
         const row = document.createElement('div');
         row.className = 'task-input-row';
-        row.innerHTML = `<input type="text" placeholder="Task" class="task-name"><input type="number" placeholder="Cost" class="task-cost" style="width: 80px;">`;
-        document.getElementById('tasks-inputs').appendChild(row);
+        row.innerHTML = `<input type="text" class="task-name" placeholder="Առաջադրանք">
+                         <input type="number" class="task-cost" style="width: 80px;" placeholder="Coin">`;
+        container.appendChild(row);
     };
 </script>
 </body>
