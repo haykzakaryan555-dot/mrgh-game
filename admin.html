@@ -20,6 +20,8 @@
         .btn-change { background: #e67e22; color: white; margin-top: 10px; margin-left: 5px; } 
         .btn-copy { background: #9b59b6; color: white; margin-top: 10px; margin-left: 5px; }
         .btn-delete { background: #e74c3c; color: white; margin-top: 10px; margin-left: 5px; }
+        .btn-vis-on { background: #27ae60; color: white; margin-top: 10px; margin-left: 5px; }
+        .btn-vis-off { background: #7f8c8d; color: white; margin-top: 10px; margin-left: 5px; }
         .btn-passed { padding: 5px 10px; font-size: 12px; transition: 0.2s; }
         .btn-back { background: #95a5a6; color: white; margin-bottom: 20px; }
         .hidden { display: none; }
@@ -227,12 +229,13 @@
                     if (!globalGroupedGames[hash]) {
                         globalGroupedGames[hash] = { gameData: game, instances: [] };
                     }
-                    globalGroupedGames[hash].instances.push({ uid, username, gameId, tasks: game.tasks });
+                    globalGroupedGames[hash].instances.push({ uid, username, gameId, tasks: game.tasks, isHidden: game.isHidden });
                 });
             }
         });
         Object.entries(globalGroupedGames).forEach(([hash, group]) => {
             const game = group.gameData;
+            const isHidden = game.isHidden || false;
             const userNames = group.instances.map(i => i.username).join(', ');
             const div = document.createElement('div');
             div.className = 'admin-game-card';
@@ -244,14 +247,25 @@
                 <button class="btn btn-change">Change</button>
                 <button class="btn btn-copy">Copy</button>
                 <button class="btn btn-delete">Delete</button>
+                <button class="btn ${isHidden ? 'btn-vis-off' : 'btn-vis-on'} btn-vis">${isHidden ? 'Hidden' : 'Visible'}</button>
             `;
             div.querySelector('.btn-enter').onclick = () => enterGlobalGame(hash, game.name);
             div.querySelector('.btn-change').onclick = () => editGlobalGame(hash);
             div.querySelector('.btn-copy').onclick = () => copyGlobalGame(hash);
             div.querySelector('.btn-delete').onclick = () => deleteGlobalGame(hash);
+            div.querySelector('.btn-vis').onclick = () => toggleGlobalGameVis(hash, !isHidden);
             container.appendChild(div);
         });
     }
+
+    window.toggleGlobalGameVis = async (hash, setHidden) => {
+        const group = globalGroupedGames[hash];
+        const updates = {};
+        group.instances.forEach(inst => {
+            updates[`users/${inst.uid}/games/${inst.gameId}/isHidden`] = setHidden;
+        });
+        await update(ref(db), updates);
+    };
 
     window.toggleAllUsers = () => {
         const isChecked = document.getElementById('selectAllUsers').checked;
@@ -303,7 +317,7 @@
                     cleanTasks[push(ref(db)).key] = { desc: t.desc, cost: t.cost, status: 'pending' };
                 });
             }
-            updates[`users/${instance.uid}/games/${newGameId}`] = { ...game, name: game.name + " (Copy)", tasks: cleanTasks };
+            updates[`users/${instance.uid}/games/${newGameId}`] = { ...game, name: game.name + " (Copy)", tasks: cleanTasks, isHidden: game.isHidden || false };
         });
         await update(ref(db), updates);
     };
@@ -329,7 +343,7 @@
         const list = document.getElementById('task-list');
         list.innerHTML = "";
         if(group.gameData.tasks) {
-            const sortedTasks = Object.entries(group.gameData.tasks).sort((a, b) => a[0].localeCompare(b[0])).map(e => e[1]);
+            const sortedTasks = Object.values(group.gameData.tasks).sort((a, b) => (a.cost || 0) - (b.cost || 0));
             sortedTasks.forEach((templateTask) => {
                 let allPassed = true;
                 group.instances.forEach(inst => {
@@ -395,18 +409,24 @@
                 snapshot.forEach((child) => {
                     const game = child.val();
                     const gameId = child.key;
+                    const isHidden = game.isHidden || false;
                     const div = document.createElement('div');
                     div.className = 'admin-game-card';
-                    div.innerHTML = `<img src="${game.image}" alt=""><h4>${game.name}</h4><button class="btn btn-enter">Enter</button><button class="btn btn-change">Change</button><button class="btn btn-copy">Copy</button><button class="btn btn-delete">Delete</button>`;
+                    div.innerHTML = `<img src="${game.image}" alt=""><h4>${game.name}</h4><button class="btn btn-enter">Enter</button><button class="btn btn-change">Change</button><button class="btn btn-copy">Copy</button><button class="btn btn-delete">Delete</button><button class="btn ${isHidden ? 'btn-vis-off' : 'btn-vis-on'} btn-vis">${isHidden ? 'Hidden' : 'Visible'}</button>`;
                     div.querySelector('.btn-enter').onclick = () => enterGame(gameId, game.name);
                     div.querySelector('.btn-change').onclick = () => editGame(gameId);
                     div.querySelector('.btn-copy').onclick = () => copyGame(gameId);
                     div.querySelector('.btn-delete').onclick = () => deleteGame(gameId);
+                    div.querySelector('.btn-vis').onclick = () => toggleGameVis(gameId, !isHidden);
                     container.appendChild(div);
                 });
             }
         });
     }
+
+    window.toggleGameVis = async (gameId, setHidden) => {
+        await update(ref(db, `users/${currentUid}/games/${gameId}`), { isHidden: setHidden });
+    };
 
     window.hideAddGame = () => {
         document.getElementById('view-add-game').classList.add('hidden');
@@ -493,7 +513,7 @@
             });
             const gameData = { name, image, url, tasks };
             if (editingGameId) { await update(ref(db, `users/${currentUid}/games/${editingGameId}`), gameData); }
-            else { await set(push(ref(db, `users/${currentUid}/games`)), gameData); }
+            else { await set(push(ref(db, `users/${currentUid}/games`)), { ...gameData, isHidden: false }); }
         } else {
             const taskNames = document.querySelectorAll('.task-name');
             const taskCosts = document.querySelectorAll('.task-cost');
@@ -519,7 +539,8 @@
                         const tId = existingTaskId || push(ref(db)).key;
                         finalTasks[tId] = { desc: newTask.desc, cost: newTask.cost, status: existingStatus };
                     });
-                    updates[`users/${uid}/games/${gameId}`] = { name, image, url, tasks: finalTasks };
+                    const finalHidden = existingInstance ? (existingInstance.isHidden || false) : (group.gameData.isHidden || false);
+                    updates[`users/${uid}/games/${gameId}`] = { name, image, url, tasks: finalTasks, isHidden: finalHidden };
                 });
                 oldUids.forEach(uid => {
                     if (!selectedUids.includes(uid)) {
@@ -532,7 +553,7 @@
                     const gameId = push(ref(db)).key;
                     let tasks = {};
                     newTasksArray.forEach(newTask => { tasks[push(ref(db)).key] = { desc: newTask.desc, cost: newTask.cost, status: 'pending' }; });
-                    updates[`users/${uid}/games/${gameId}`] = { name, image, url, tasks };
+                    updates[`users/${uid}/games/${gameId}`] = { name, image, url, tasks, isHidden: false };
                 });
             }
             await update(ref(db), updates);
@@ -548,7 +569,7 @@
             if(game.tasks) {
                 Object.values(game.tasks).forEach(t => { cleanTasks[push(ref(db)).key] = { desc: t.desc, cost: t.cost, status: 'pending' }; });
             }
-            await set(push(ref(db, `users/${currentUid}/games`)), { ...game, name: game.name + " (Copy)", tasks: cleanTasks });
+            await set(push(ref(db, `users/${currentUid}/games`)), { ...game, name: game.name + " (Copy)", tasks: cleanTasks, isHidden: game.isHidden || false });
         }
     };
 
@@ -565,7 +586,7 @@
             if(snapshot.exists()){
                 let tasksArr = [];
                 snapshot.forEach((child) => { tasksArr.push({ key: child.key, val: child.val() }); });
-                tasksArr.sort((a, b) => a.key.localeCompare(b.key));
+                tasksArr.sort((a, b) => (a.val.cost || 0) - (b.val.cost || 0));
                 tasksArr.forEach((child) => {
                     const task = child.val;
                     const isPassed = task.status === 'passed';
