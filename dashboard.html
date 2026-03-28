@@ -460,51 +460,66 @@
     }
 
     function loadUserGames(uid) {
-        onValue(ref(db, `users/${uid}/games`), (snapshot) => {
-            const container = document.getElementById('games-container');
-            container.innerHTML = "";
-            if (!snapshot.exists()) {
-                container.innerHTML = "<h3>Игры не найдены в базе.</h3>";
-                return;
+    onValue(ref(db, `users/${uid}/games`), (snapshot) => {
+        const container = document.getElementById('games-container');
+        container.innerHTML = "";
+        
+        if (!snapshot.exists()) {
+            container.innerHTML = "<h3>Игры не найдены.</h3>";
+            return;
+        }
+
+        let htmlContent = ""; 
+        snapshot.forEach((child) => {
+            const game = child.val();
+            const gameId = child.key;
+
+            // Սա կօգնի մեզ տեսնել, թե ինչ է գալիս բազայից (բացիր F12 -> Console)
+            console.log("Խաղի տվյալները:", gameId, game);
+
+            // ՍՏՈՒԳՈՒՄ․ Եթե խաղը նշված է որպես թաքնված տարբեր ձևերով
+            if (
+                game.status === 'hidden' || 
+                game.visibility === 'hidden' || 
+                game.visible === false || 
+                game.hidden === true
+            ) {
+                console.log(`Խաղը թաքցված է (ID: ${gameId})`);
+                return; // Անցնում ենք հաջորդ խաղին, սա չենք ավելացնում էկրանին
             }
-            
-            let htmlContent = ""; 
-            snapshot.forEach((child) => {
-                const game = child.val();
 
-                // ԱՎԵԼԱՑՎԱԾ Է․ Եթե խաղի վիճակը hidden է, այն ընդհանրապես չի երևում ցուցակում
-                if (game.status === 'hidden' || game.visibility === 'hidden' || game.visible === false) {
-                    return; 
+            let isFinished = false;
+            if (game.tasks) {
+                // Առաջադրանքների ֆիլտրում (ցույց տալ միայն տեսանելիները)
+                const tasksArray = Object.values(game.tasks).filter(t => 
+                    t.status !== 'hidden' && t.visibility !== 'hidden' && t.visible !== false
+                );
+                if (tasksArray.length > 0) {
+                    isFinished = tasksArray.every(t => t.status === 'passed');
                 }
+            } else {
+                isFinished = (game.status === 'passed');
+            }
 
-                let isFinished = false;
-                if (game.tasks) {
-                    const tasksArray = Object.values(game.tasks).filter(task => task.visibility !== 'hidden' && task.visible !== false && task.status !== 'hidden');
-                    if (tasksArray.length > 0) {
-                        isFinished = tasksArray.every(task => task.status === 'passed');
-                    }
-                } else {
-                    isFinished = game.status === 'passed';
-                }
+            let statusText = isFinished ? 'Завершено' : 'Еще осталось';
+            let statusClass = isFinished ? 'done' : 'pending';
 
-                let statusText = isFinished ? 'Завершено' : 'Еще осталось';
-                let statusClass = isFinished ? 'done' : 'pending';
-
-                htmlContent += `
-                    <div class="game-card">
-                        <div class="game-info-wrapper">
-                            <img src="${game.image}" class="game-image">
-                            <div class="game-details">
-                                <h2>${game.name}</h2>
-                                <div class="status ${statusClass}">${statusText}</div>
-                                <button class="btn" onclick="openGameTasks('${child.key}')">Подключиться</button>
-                            </div>
+            htmlContent += `
+                <div class="game-card">
+                    <div class="game-info-wrapper">
+                        <img src="${game.image}" class="game-image">
+                        <div class="game-details">
+                            <h2>${game.name}</h2>
+                            <div class="status ${statusClass}">${statusText}</div>
+                            <button class="btn" onclick="openGameTasks('${gameId}')">Подключиться</button>
                         </div>
-                    </div>`;
-            });
-            container.innerHTML = htmlContent;
+                    </div>
+                </div>`;
         });
-    }
+        
+        container.innerHTML = htmlContent;
+    });
+}
 
     window.openGameTasks = async (gameId) => {
         const gameSnapshot = await get(ref(db, `users/${currentUid}/games/${gameId}`));
