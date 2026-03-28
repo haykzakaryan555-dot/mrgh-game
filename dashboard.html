@@ -391,14 +391,13 @@
     const db = getDatabase(app);
     const auth = getAuth(app);
 
-    // Ստեղծում ենք currentUid փոփոխականը MY_PAGE_UID-ի փոխարեն
     let currentUid = ""; 
     let userData = {};  
     let currentGameUrl = "";
 
     onAuthStateChanged(auth, (user) => {
         if (user) {
-            currentUid = user.uid; // Պահպանում ենք ակտիվ օգտատիրոջ UID-ն
+            currentUid = user.uid; 
             loadUserData(currentUid);
             loadUserGames(currentUid);
         } else {
@@ -422,7 +421,6 @@
         if (promoSnapshot.exists()) {
             const promoData = promoSnapshot.val();
             const promoId = promoData.promoId || "legacy";
-            // Օգտագործում ենք currentUid
             const userPromoRef = ref(db, `users/${currentUid}/usedPromos/${promoCode}`);
             const userPromoSnapshot = await get(userPromoRef);
 
@@ -441,7 +439,6 @@
         } else { alert("Неверный промокод!"); }
     };
 
-    // Ավելացնում ենք uid արգումենտը
     function loadUserData(uid) {
         onValue(ref(db, `users/${uid}`), (snapshot) => {
             userData = snapshot.val();
@@ -471,13 +468,14 @@
                 return;
             }
             
-            let htmlContent = ""; // Օպտիմիզացիա՝ DOM-ը մեկ անգամ թարմացնելու համար
+            let htmlContent = ""; 
             snapshot.forEach((child) => {
                 const game = child.val();
                 let isFinished = false;
                 
                 if (game.tasks) {
-                    const tasksArray = Object.values(game.tasks);
+                    // Ստուգում ենք, որ առաջադրանքը թաքնված չէ
+                    const tasksArray = Object.values(game.tasks).filter(task => task.visibility !== 'hidden' && task.visible !== false && task.status !== 'hidden');
                     if (tasksArray.length > 0) {
                         isFinished = tasksArray.every(task => task.status === 'passed');
                     }
@@ -505,7 +503,6 @@
     }
 
     window.openGameTasks = async (gameId) => {
-        // Օգտագործում ենք currentUid
         const gameSnapshot = await get(ref(db, `users/${currentUid}/games/${gameId}`));
         const game = gameSnapshot.val();
         currentGameUrl = game.url;
@@ -515,7 +512,15 @@
         
         if(game && game.tasks) {
             let tasksHtml = "";
-            Object.values(game.tasks).forEach(task => {
+            // Սորտավորում ենք keys-ով հերթականությունը պահելու համար և ֆիլտրում ենք hidden-ները
+            Object.keys(game.tasks)
+                .sort((a, b) => a.localeCompare(b, undefined, { numeric: true }))
+                .forEach(key => {
+                const task = game.tasks[key];
+                
+                // Եթե այն թաքնված է ադմինի կողմից, չենք նկարում
+                if (task.visibility === 'hidden' || task.visible === false || task.status === 'hidden') return;
+
                 const statusClass = task.status === 'passed' ? 'passed' : 'pending';
                 tasksHtml += `
                     <div class="task-item ${statusClass}">
@@ -536,7 +541,6 @@
     window.upgradeLevel = async () => {
         const cost = getLevelCost(userData.level);
         if (userData.coins >= cost) {
-            // Օգտագործում ենք currentUid
             await update(ref(db, `users/${currentUid}`), {
                 coins: userData.coins - cost,
                 level: (userData.level || 1) + 1
@@ -562,7 +566,6 @@
         const currentRankCost = userData.rankPrice || 1000;
 
         if (userData.coins >= currentRankCost) {
-            // Օգտագործում ենք currentUid
             await update(ref(db, `users/${currentUid}`), {
                 coins: userData.coins - currentRankCost,
                 rank: (userData.rank || 1) + 1,
