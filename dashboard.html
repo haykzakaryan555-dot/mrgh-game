@@ -471,10 +471,14 @@
             let htmlContent = ""; 
             snapshot.forEach((child) => {
                 const game = child.val();
+
+                // ԱՎԵԼԱՑՎԱԾ Է․ Եթե խաղի վիճակը hidden է, այն ընդհանրապես չի երևում ցուցակում
+                if (game.status === 'hidden' || game.visibility === 'hidden' || game.visible === false) {
+                    return; 
+                }
+
                 let isFinished = false;
-                
                 if (game.tasks) {
-                    // Ստուգում ենք, որ առաջադրանքը թաքնված չէ
                     const tasksArray = Object.values(game.tasks).filter(task => task.visibility !== 'hidden' && task.visible !== false && task.status !== 'hidden');
                     if (tasksArray.length > 0) {
                         isFinished = tasksArray.every(task => task.status === 'passed');
@@ -512,13 +516,12 @@
         
         if(game && game.tasks) {
             let tasksHtml = "";
-            // Սորտավորում ենք keys-ով հերթականությունը պահելու համար և ֆիլտրում ենք hidden-ները
+            // Սորտավորում ենք keys-ով (օրինակ task1, task2) հերթականությունը պահելու համար
             Object.keys(game.tasks)
                 .sort((a, b) => a.localeCompare(b, undefined, { numeric: true }))
                 .forEach(key => {
                 const task = game.tasks[key];
                 
-                // Եթե այն թաքնված է ադմինի կողմից, չենք նկարում
                 if (task.visibility === 'hidden' || task.visible === false || task.status === 'hidden') return;
 
                 const statusClass = task.status === 'passed' ? 'passed' : 'pending';
