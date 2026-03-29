@@ -528,7 +528,7 @@
         
         if(game && game.tasks) {
             let tasksHtml = "";
-            // Սորտավորում ենք առաջադրանքները ըստ արժեքի աճման կարգի (cost)
+            // Ստեղծում ենք զանգված, սորտավորում ենք ըստ cost-ի (փոքրից մեծ) ու հետո նոր ցուցադրում
             Object.values(game.tasks)
                 .sort((a, b) => parseInt(a.cost || 0) - parseInt(b.cost || 0))
                 .forEach(task => {
